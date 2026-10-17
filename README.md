@@ -122,3 +122,7 @@ The $ figure is an **estimate at public API prices** (input, output, cache write
 Showing the bar over other apps and the Control Strip icon use private Touch Bar API (as MTMR and Pock do). Controlling Claude's window goes through the Accessibility API. If a future macOS or Claude release changes any of that, the app won't crash; that one feature just stops working.
 
 Unofficial project, not affiliated with Anthropic.
+
+## License
+
+[MIT](LICENSE)

@@ -120,3 +120,7 @@ Cena v $ je **orientační přepočet podle veřejného API ceníku** (vstup, v�
 Zobrazení nad jinými aplikacemi a ikona v Control Stripu používají neveřejné API Touch Baru (stejně jako MTMR nebo Pock). Ovládání okna Clauda jde přes rozhraní Zpřístupnění. Kdyby budoucí macOS nebo nová verze Clauda něco z toho změnila, aplikace nespadne, jen daná funkce přestane fungovat.
 
 Neoficiální projekt, není spojený s Anthropicem.
+
+## Licence
+
+[MIT](LICENSE)
