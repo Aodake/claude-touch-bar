@@ -509,12 +509,12 @@ struct GitSection: View {
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
             LabeledContent("Název na Touch Baru") {
-                TextField("Econs portal", text: Binding(
+                TextField("Můj projekt", text: Binding(
                     get: { Settings.pushName }, set: { Settings.pushName = $0; model.changed() }))
             }
             LabeledContent("Složka repozitáře") {
                 HStack {
-                    TextField("~/Documents/PortalEcons", text: Binding(
+                    TextField("~/Documents/muj-projekt", text: Binding(
                         get: { Settings.pushRepo },
                         set: { Settings.pushRepo = ($0 as NSString).expandingTildeInPath; model.changed() }))
                     Button("Vybrat…") { chooseFolder() }
