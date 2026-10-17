@@ -121,6 +121,10 @@ Zobrazení nad jinými aplikacemi a ikona v Control Stripu používají neveřej
 
 Neoficiální projekt, není spojený s Anthropicem.
 
+## Podpora
+
+Jestli ti aplikace ušetří pár přepínání oken a chceš poděkovat, můžeš mi [poslat na kafe přes PayPal](https://paypal.me/aodake). Úplně dobrovolně.
+
 ## Licence
 
 [MIT](LICENSE)

@@ -123,6 +123,10 @@ Showing the bar over other apps and the Control Strip icon use private Touch Bar
 
 Unofficial project, not affiliated with Anthropic.
 
+## Support
+
+If it saves you a few window switches and you'd like to say thanks, you can [buy me a coffee via PayPal](https://paypal.me/aodake). Totally optional.
+
 ## License
 
 [MIT](LICENSE)
