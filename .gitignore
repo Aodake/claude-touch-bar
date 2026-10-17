@@ -1,0 +1,4 @@
+build/
+shots/
+.DS_Store
+*.bak
