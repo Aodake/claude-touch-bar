@@ -24,6 +24,17 @@ Průběh, útrata a ovládání desktopové aplikace Claude přímo na Touch Bar
 
 ## Instalace
 
+### Možnost 1: Stáhnout z Releases
+
+1. Stáhni `Claude-Touch-Bar-<verze>.zip` z [nejnovějšího vydání](https://github.com/Aodake/claude-touch-bar/releases/latest) (Apple Silicon) a rozbal ho.
+2. Přesuň **Claude Touch Bar.app** do složky `Aplikace` *ještě před prvním spuštěním*. Hooky míří na umístění aplikace, takže ji nespouštěj ze Stažených souborů.
+3. Aplikace není notarizovaná, takže první spuštění chce jeden krok navíc: pravý klik na aplikaci → **Otevřít** → **Otevřít**. Když to macOS i tak odmítne, jdi do Nastavení systému → Soukromí a zabezpečení a klikni na **Přesto otevřít**.
+4. Pokud chceš, aby se spouštěla sama, zapni v okně aplikace (Obecné) **spouštění po přihlášení**.
+
+Žádné nástroje pro sestavení nejsou potřeba. Co aplikace dělá s daty a proč potřebuje Zpřístupnění, popisuje [SECURITY.md](SECURITY.md) (anglicky).
+
+### Možnost 2: Sestavit ze zdrojáků skriptem
+
 ```bash
 git clone https://github.com/Aodake/claude-touch-bar.git
 cd claude-touch-bar
@@ -32,7 +43,7 @@ cd claude-touch-bar
 
 Skript aplikaci sestaví, zkopíruje do `~/Applications`, zapne spouštění po přihlášení a otevře okno.
 
-Pak:
+### Po instalaci
 
 1. **Zapni hooky** v okně (Napojení na Claude → Zapnout). Díky nim je stav přesný a jde schvalovat a odpovídat z Touch Baru.
 2. **Povol Zpřístupnění** (Nastavení systému → Soukromí a zabezpečení → Zpřístupnění). Je potřeba pro ovládání okna Clauda.

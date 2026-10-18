@@ -25,6 +25,17 @@ Progress, spend and controls for the Claude desktop app, right on your MacBook's
 
 ## Install
 
+### Option 1: Download from Releases
+
+1. Download `Claude-Touch-Bar-<version>.zip` from the [latest release](https://github.com/Aodake/claude-touch-bar/releases/latest) (Apple Silicon) and unzip it.
+2. Move **Claude Touch Bar.app** to `Applications` *before* the first launch. The hooks point at the app's location, so don't run it from Downloads.
+3. The app isn't notarized, so the first launch needs one extra step: right-click the app → **Open** → **Open**. If macOS still refuses, go to System Settings → Privacy & Security and click **Open Anyway**.
+4. Turn on **Launch at login** in the app window (General) if you want it to start by itself.
+
+No build tools needed. What the app does with your data and why it needs Accessibility is described in [SECURITY.md](SECURITY.md).
+
+### Option 2: Build from source with the script
+
 ```bash
 git clone https://github.com/Aodake/claude-touch-bar.git
 cd claude-touch-bar
@@ -33,7 +44,7 @@ cd claude-touch-bar
 
 The script builds the app, copies it to `~/Applications`, turns on launch at login and opens the window.
 
-Then:
+### After installing
 
 1. **Turn on hooks** in the window (Claude integration → Turn on). They make the status exact and let you approve and answer from the Touch Bar.
 2. **Allow Accessibility** (System Settings → Privacy & Security → Accessibility). It's needed to control Claude's window.
