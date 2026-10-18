@@ -87,7 +87,7 @@ final class TouchBarController: NSObject, NSTouchBarDelegate {
     /// The ⋯ actions row. A real NSPopoverTouchBarItem doesn't open on a
     /// system-modal bar, so ⋯ swaps the bar's items instead.
     private var showingActions = false
-    /// Brief "✓ Povoleno" after a tap, so the answer visibly landed.
+    /// Brief "✓ Allowed" after a tap, so the answer visibly landed.
     private var confirmation: (String, NSColor)?
     private var actionsTimeout: DispatchWorkItem?
     private var buttons: [NSTouchBarItem.Identifier: NSButton] = [:]
@@ -122,44 +122,55 @@ final class TouchBarController: NSObject, NSTouchBarDelegate {
             buttons[id] = button
         }
 
-        configure(ID.switcher, symbol: "rectangle.3.group", label: "Přepnout rozložení")
+        localizeLabels()
         buttons[ID.switcher]?.widthAnchor.constraint(equalToConstant: 44).isActive = true
-        configure(ID.graph, symbol: nil, label: "Spotřeba za poslední hodinu")
         buttons[ID.graph]?.imagePosition = .imageOnly
-        // Icon-only so the ⋯ row also fits Povolit / Zamítnout.
-        configure(ID.stop, symbol: "stop.fill", label: "Zastavit")
-        configure(ID.new, symbol: "plus", label: "Nové sezení")
         configure(ID.sessions, symbol: "rectangle.stack", label: nil)
-        configure(ID.detail, symbol: "info.circle", label: "Detail")
         // Push shows the git state next to its icon, so it isn't icon-only.
         configure(ID.push, symbol: "arrow.up.circle", label: nil)
         configure(ID.mode, symbol: "shield.lefthalf.filled", label: nil)
-        configure(ID.collapse, symbol: "chevron.down.circle", label: "Zmenšit na Touch Bar Macu")
         buttons[ID.collapse]?.widthAnchor.constraint(equalToConstant: 44).isActive = true
-        configure(ID.cardClose, symbol: "xmark", label: "Zavřít kartu")
         buttons[ID.cardClose]?.widthAnchor.constraint(equalToConstant: 40).isActive = true
         buttons[ID.cardButtons[0]]?.bezelColor = Palette.claude.blended(withFraction: 0.35, of: .black)
         for id in [ID.stop, ID.new, ID.detail] {
             buttons[id]?.widthAnchor.constraint(equalToConstant: 48).isActive = true
         }
-        configure(ID.more, symbol: "ellipsis.circle", label: "Akce")
         buttons[ID.more]?.widthAnchor.constraint(equalToConstant: 44).isActive = true
         configure(ID.back, symbol: "chevron.left", label: nil)
-        set(ID.back, [(" Zpět", .white)])
         configure(ID.modelPicker, symbol: "cpu", label: nil)
         configure(ID.files, symbol: "pencil", label: nil)
         configure(ID.compact, symbol: "arrow.down.right.and.arrow.up.left", label: nil)
         buttons[ID.compact]?.bezelColor = Palette.warning.blended(withFraction: 0.45, of: .black)
-        set(ID.compact, [(" Zkomprimovat", .white)])
         for (index, model) in ClaudeUI.touchBarModels.enumerated() {
             set(ID.modelOptions[index], [(model, .white)])
         }
-        set(ID.effort, [("Úsilí ▸", .white)])
-
         buttons[ID.always]?.bezelColor = NSColor(srgbRed: 0.16, green: 0.36, blue: 0.62, alpha: 1)
-        set(ID.always, [("Vždy povolit", .white)])
 
         applyIdentifiers()
+    }
+
+    /// Fixed titles and icon descriptions in the current UI language.
+    private func localizeLabels() {
+        configure(ID.switcher, symbol: "rectangle.3.group", label: L("Přepnout rozložení", "Switch layout"))
+        configure(ID.graph, symbol: nil, label: L("Spotřeba za poslední hodinu", "Spend in the last hour"))
+        // Icon-only so the ⋯ row also fits Allow / Deny.
+        configure(ID.stop, symbol: "stop.fill", label: L("Zastavit", "Stop"))
+        configure(ID.new, symbol: "plus", label: L("Nové sezení", "New session"))
+        configure(ID.detail, symbol: "info.circle", label: "Detail")
+        configure(ID.collapse, symbol: "chevron.down.circle", label: L("Zmenšit na Touch Bar Macu", "Shrink to the Mac's Touch Bar"))
+        configure(ID.cardClose, symbol: "xmark", label: L("Zavřít kartu", "Close card"))
+        configure(ID.more, symbol: "ellipsis.circle", label: L("Akce", "Actions"))
+        set(ID.back, [(L(" Zpět", " Back"), .white)])
+        set(ID.compact, [(L(" Zkomprimovat", " Compact"), .white)])
+        set(ID.effort, [(L("Úsilí ▸", "Effort ▸"), .white)])
+        set(ID.always, [(L("Vždy povolit", "Always allow"), .white)])
+    }
+
+    /// The UI language changed: retitle everything and rebuild the bar.
+    func languageChanged() {
+        localizeLabels()
+        applyIdentifiers()
+        if isPresented { present() }
     }
 
     private func configure(_ id: NSTouchBarItem.Identifier, symbol: String?, label: String?) {
@@ -344,7 +355,7 @@ final class TouchBarController: NSObject, NSTouchBarDelegate {
             if let approval {
                 answer(approval, decision)
             } else {
-                flash("Nic nečeká na schválení", Palette.dim)
+                flash(L("Nic nečeká na schválení", "Nothing waits for approval"), Palette.dim)
             }
         case ID.more: setShowingActions(true)
         case ID.modelPicker:
@@ -364,9 +375,9 @@ final class TouchBarController: NSObject, NSTouchBarDelegate {
         case ID.waiting: onOpenWaiting?()
         case ID.compact:
             if KeySender.sendMessage("/compact") {
-                flash("⇣ Posláno: /compact", Palette.claude)
+                flash(L("⇣ Posláno: /compact", "⇣ Sent: /compact"), Palette.claude)
             } else {
-                flash("Povol aplikaci Zpřístupnění v Nastavení systému", Palette.warning)
+                flash(L("Povol aplikaci Zpřístupnění v Nastavení systému", "Allow the app in System Settings → Accessibility"), Palette.warning)
             }
         case ID.collapse:
             minimize()
@@ -384,10 +395,10 @@ final class TouchBarController: NSObject, NSTouchBarDelegate {
             onCycleSession?()
         case ID.push:
             // Claude writes the commit message and pushes in the open chat.
-            if KeySender.sendMessage("Commitni a pushni změny") {
-                flash("↑ Posláno Claudovi: commit a push", Palette.claude)
+            if KeySender.sendMessage(L("Commitni a pushni změny", "Commit and push the changes")) {
+                flash(L("↑ Posláno Claudovi: commit a push", "↑ Sent to Claude: commit and push"), Palette.claude)
             } else {
-                flash("Povol aplikaci Zpřístupnění v Nastavení systému", Palette.warning)
+                flash(L("Povol aplikaci Zpřístupnění v Nastavení systému", "Allow the app in System Settings → Accessibility"), Palette.warning)
             }
         case ID.detail:
             setShowingActions(false)
@@ -400,15 +411,15 @@ final class TouchBarController: NSObject, NSTouchBarDelegate {
     private func answer(_ request: ApprovalRequest, _ decision: ApprovalDecision) {
         onApproval?(request.id, decision)
         switch decision {
-        case .allow: flash("✓ Povoleno · " + request.toolName, Palette.done)
-        case .always: flash("✓ Vždy povoleno · " + request.toolName, Palette.done)
-        case .deny: flash("✕ Zamítnuto · " + request.toolName, Palette.danger)
+        case .allow: flash(L("✓ Povoleno · ", "✓ Allowed · ") + request.toolName, Palette.done)
+        case .always: flash(L("✓ Vždy povoleno · ", "✓ Always allowed · ") + request.toolName, Palette.done)
+        case .deny: flash(L("✕ Zamítnuto · ", "✕ Denied · ") + request.toolName, Palette.danger)
         }
     }
 
     /// After an effort tap: show the new level on its button, keep the row open.
     func setEffortLabel(_ label: String) {
-        set(ID.effort, [("Úsilí: " + label + " ▸", .white)])
+        set(ID.effort, [(L("Úsilí: ", "Effort: ") + label + " ▸", .white)])
     }
 
     /// Shows a one-line message for 1.5 s, then the normal bar again.
@@ -504,7 +515,7 @@ final class TouchBarController: NSObject, NSTouchBarDelegate {
         case .done:
             let config = NSImage.SymbolConfiguration(pointSize: size * 0.8, weight: .semibold)
                 .applying(.init(paletteColors: [Palette.done]))
-            return NSImage(systemSymbolName: "checkmark.circle", accessibilityDescription: "Hotovo")?
+            return NSImage(systemSymbolName: "checkmark.circle", accessibilityDescription: L("Hotovo", "Done"))?
                 .withSymbolConfiguration(config) ?? Spark.image(size: size, color: Palette.done)
         case .idle:
             return Spark.image(size: size, color: Palette.claude)
@@ -547,10 +558,10 @@ final class TouchBarController: NSObject, NSTouchBarDelegate {
 
     private var stateWord: String {
         switch snapshot.activity {
-        case .working: return "Pracuje"
-        case .waiting: return "Čeká"
-        case .done: return "Hotovo"
-        case .idle: return snapshot.hasSession ? "Nečinný" : "Žádné sezení"
+        case .working: return L("Pracuje", "Working")
+        case .waiting: return L("Čeká", "Waiting")
+        case .done: return L("Hotovo", "Done")
+        case .idle: return snapshot.hasSession ? L("Nečinný", "Idle") : L("Žádné sezení", "No session")
         }
     }
 
@@ -595,18 +606,18 @@ final class TouchBarController: NSObject, NSTouchBarDelegate {
         set(ID.model, [(s.modelName, Palette.dim)])
         buttons[ID.graph]?.image = sparkline(s.burn, size: NSSize(width: 64, height: 20))
 
-        set(ID.session, summary("Sezení", s.session))
+        set(ID.session, summary(L("Sezení", "Session"), s.session))
         set(ID.fiveHours, summary("5 h", s.fiveHours))
         if let fraction = budgetFraction {
             buttons[ID.today]?.image = progressImage(fraction, width: 36, color: budgetColor)
             buttons[ID.today]?.imagePosition = .imageTrailing
-            set(ID.today, [("Dnes ", Palette.dim), (Format.cost(s.today.cost), budgetColor),
+            set(ID.today, [(L("Dnes ", "Today "), Palette.dim), (Format.cost(s.today.cost), budgetColor),
                            ("/" + Format.cost(Settings.dailyBudget)
                             + (s.budgetRunway(Settings.dailyBudget).map { " " + Format.runway($0) } ?? "") + " ",
                             Palette.dim)])
         } else {
             buttons[ID.today]?.image = nil
-            set(ID.today, summary("Dnes", s.today))
+            set(ID.today, summary(L("Dnes", "Today"), s.today))
         }
 
         buttons[ID.wide]?.image = progressImage(s.contextFraction, width: 140, color: ctxColor)
@@ -619,14 +630,14 @@ final class TouchBarController: NSObject, NSTouchBarDelegate {
             if let tool = s.tool { wide.append(("  " + truncate(tool, 14), Palette.dim)) }
             set(ID.wide, wide)
         } else {
-            set(ID.wide, [(" Žádné Code sezení", Palette.dim)])
+            set(ID.wide, [(L(" Žádné Code sezení", " No Code session"), Palette.dim)])
         }
 
         let sessionLabel: String
         if s.isAutoSelected {
-            sessionLabel = " Sezení: auto" + (sessionPosition.map { " (\($0))" } ?? "")
+            sessionLabel = L(" Sezení: auto", " Session: auto") + (sessionPosition.map { " (\($0))" } ?? "")
         } else {
-            sessionLabel = " " + (sessionPosition ?? "") + " " + truncate(s.title ?? s.project ?? "sezení", 12)
+            sessionLabel = " " + (sessionPosition ?? "") + " " + truncate(s.title ?? s.project ?? L("sezení", "session"), 12)
         }
         set(ID.sessions, [(sessionLabel, .white)])
 
@@ -641,12 +652,12 @@ final class TouchBarController: NSObject, NSTouchBarDelegate {
             set(ID.push, [(" Push", .white)])
         }
 
-        set(ID.week, summary("Týden", s.week))
-        set(ID.month, summary("Měsíc", s.month))
+        set(ID.week, summary(L("Týden", "Week"), s.week))
+        set(ID.month, summary(L("Měsíc", "Month"), s.month))
         set(ID.rate, [(Format.cost(s.hourlyRate), .white), ("/h", Palette.dim)])
         set(ID.active, [("⏱ ", Palette.dim), (Format.minutes(s.activeMinutes), .white)])
-        set(ID.files, [(" \(s.changedFiles.count) ", .white), (s.changedFiles.count == 1 ? "soubor" : "souborů", Palette.dim)])
-        set(ID.waiting, [("● ", Palette.waiting), ("\(s.waitingCount) čeká", .white)])
+        set(ID.files, [(" \(s.changedFiles.count) ", .white), (s.changedFiles.count == 1 ? L("soubor", "file") : L("souborů", "files"), Palette.dim)])
+        set(ID.waiting, [("● ", Palette.waiting), ("\(s.waitingCount) " + L("čeká", "waiting"), .white)])
         set(ID.modelPicker, [(" " + s.modelName, .white)])
 
         if let plan = s.plan {
@@ -657,7 +668,7 @@ final class TouchBarController: NSObject, NSTouchBarDelegate {
             set(ID.plan, parts)
         }
 
-        let mode = s.mode ?? "Režim"
+        let mode = s.mode ?? L("Režim", "Mode")
         set(ID.mode, [(" " + mode, .white)])
         for (index, option) in ClaudeUI.touchBarModes.enumerated() {
             let current = option == s.mode
@@ -665,13 +676,13 @@ final class TouchBarController: NSObject, NSTouchBarDelegate {
             set(ID.modeOptions[index], [((current ? "● " : "") + option, .white)])
         }
 
-        // Povolit / Zamítnout are always in the ⋯ row; colored only when
+        // Allow / Deny are always in the ⋯ row; colored only when
         // something is actually waiting.
         let pending = !approvals.isEmpty
         buttons[ID.allow]?.bezelColor = pending ? NSColor(srgbRed: 0.18, green: 0.5, blue: 0.27, alpha: 1) : nil
         buttons[ID.deny]?.bezelColor = pending ? NSColor(srgbRed: 0.62, green: 0.18, blue: 0.16, alpha: 1) : nil
-        set(ID.allow, [("Povolit", pending ? .white : Palette.dim)])
-        set(ID.deny, [("Zamítnout", pending ? .white : Palette.dim)])
+        set(ID.allow, [(L("Povolit", "Allow"), pending ? .white : Palette.dim)])
+        set(ID.deny, [(L("Zamítnout", "Deny"), pending ? .white : Palette.dim)])
 
         renderApproval()
         renderCard()

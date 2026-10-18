@@ -19,11 +19,11 @@ final class DetailModel: ObservableObject {
 
         var title: String {
             switch self {
-            case .overview: return "Přehled"
+            case .overview: return L("Přehled", "Overview")
             case .touchBar: return "Touch Bar"
-            case .integration: return "Napojení na Claude"
-            case .git: return "Git a Push"
-            case .general: return "Obecné"
+            case .integration: return L("Napojení na Claude", "Claude integration")
+            case .git: return L("Git a Push", "Git and Push")
+            case .general: return L("Obecné", "General")
             }
         }
 
@@ -129,14 +129,14 @@ struct OverviewSection: View {
             Divider()
             tokenTable
             HStack(spacing: 24) {
-                stat("Tempo", Format.cost(s.hourlyRate) + "/h")
-                stat("Aktivní dnes", Format.minutes(s.activeMinutes))
-                stat("Změněné soubory", "\(s.changedFiles.count)")
+                stat(L("Tempo", "Rate"), Format.cost(s.hourlyRate) + "/h")
+                stat(L("Aktivní dnes", "Active today"), Format.minutes(s.activeMinutes))
+                stat(L("Změněné soubory", "Changed files"), "\(s.changedFiles.count)")
             }
             charts
             budget
             if !s.changedFiles.isEmpty { filesList }
-            Text("Cena je orientační odhad podle API ceníku, předplatné Pro/Max se po tokenech neplatí.")
+            Text(L("Cena je orientační odhad podle API ceníku, předplatné Pro/Max se po tokenech neplatí.", "Cost is a rough estimate from API pricing; Pro/Max subscriptions aren't billed per token."))
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -144,17 +144,17 @@ struct OverviewSection: View {
 
     private var stateText: String {
         switch s.activity {
-        case .working: return "pracuje"
-        case .waiting: return "čeká na tebe"
-        case .done: return "hotovo"
-        case .idle: return "nečinný"
+        case .working: return L("pracuje", "working")
+        case .waiting: return L("čeká na tebe", "waiting for you")
+        case .done: return L("hotovo", "done")
+        case .idle: return L("nečinný", "idle")
         }
     }
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 3) {
-            Text(s.title ?? (s.hasSession ? "Code sezení" : "Žádné Code sezení")).font(.title3.bold())
-            Text([s.project, s.hasSession ? s.modelName : nil, s.mode.map { "režim " + $0 }, stateText, s.tool]
+            Text(s.title ?? (s.hasSession ? L("Code sezení", "Code session") : L("Žádné Code sezení", "No Code session"))).font(.title3.bold())
+            Text([s.project, s.hasSession ? s.modelName : nil, s.mode.map { L("režim ", "mode ") + $0 }, stateText, s.tool]
                 .compactMap { $0 }.joined(separator: " · "))
                 .foregroundStyle(.secondary)
         }
@@ -162,14 +162,14 @@ struct OverviewSection: View {
 
     private func approvalBox(_ request: ApprovalRequest) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Čeká na schválení" + (model.approvals.count > 1 ? " (\(model.approvals.count))" : "")).bold()
+            Text(L("Čeká na schválení", "Waiting for approval") + (model.approvals.count > 1 ? " (\(model.approvals.count))" : "")).bold()
             Text(request.toolName + (request.summary.isEmpty ? "" : ": " + request.summary))
                 .font(.system(.body, design: .monospaced))
                 .lineLimit(3)
             HStack {
-                Button("Povolit") { model.onApproval?(request.id, .allow) }
-                if request.canAlwaysAllow { Button("Vždy povolit") { model.onApproval?(request.id, .always) } }
-                Button("Zamítnout", role: .destructive) { model.onApproval?(request.id, .deny) }
+                Button(L("Povolit", "Allow")) { model.onApproval?(request.id, .allow) }
+                if request.canAlwaysAllow { Button(L("Vždy povolit", "Always allow")) { model.onApproval?(request.id, .always) } }
+                Button(L("Zamítnout", "Deny"), role: .destructive) { model.onApproval?(request.id, .deny) }
             }
         }
         .padding(12)
@@ -180,9 +180,9 @@ struct OverviewSection: View {
     private var context: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text("Kontext")
+                Text(L("Kontext", "Context"))
                 Spacer()
-                Text("\(Format.tokens(s.contextUsed)) z \(Format.tokens(s.contextWindow)) · \(Format.percent(s.contextFraction))")
+                Text("\(Format.tokens(s.contextUsed)) " + L("z", "of") + " \(Format.tokens(s.contextWindow)) · \(Format.percent(s.contextFraction))")
                     .monospacedDigit().foregroundStyle(.secondary)
             }
             Meter(fraction: s.contextFraction,
@@ -193,14 +193,15 @@ struct OverviewSection: View {
     private func planBox(_ plan: PlanProgress) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text("Postup")
+                Text(L("Postup", "Progress"))
                 Spacer()
-                Text("\(plan.done) z \(plan.total) kroků" + (plan.eta.map { " · zbývá ~" + Format.duration($0) } ?? ""))
+                Text("\(plan.done) " + L("z", "of") + " \(plan.total) " + L("kroků", "steps")
+                     + (plan.eta.map { L(" · zbývá ~", " · ~") + Format.duration($0) + L("", " left") } ?? ""))
                     .monospacedDigit().foregroundStyle(.secondary)
             }
             Meter(fraction: plan.fraction, color: plan.done == plan.total ? Palette.done : Palette.claude)
             if let current = plan.current {
-                Text("Teď: " + current).font(.caption).foregroundStyle(.secondary).lineLimit(2)
+                Text(L("Teď: ", "Now: ") + current).font(.caption).foregroundStyle(.secondary).lineLimit(2)
             }
         }
     }
@@ -208,8 +209,8 @@ struct OverviewSection: View {
     @ViewBuilder
     private var sessionPicker: some View {
         if s.sessions.count > 1 {
-            Picker("Sezení", selection: Binding(get: { model.selectedSession }, set: { model.onSelectSession?($0) })) {
-                Text("Automaticky (to, co tě potřebuje)").tag(URL?.none)
+            Picker(L("Sezení", "Session"), selection: Binding(get: { model.selectedSession }, set: { model.onSelectSession?($0) })) {
+                Text(L("Automaticky (to, co tě potřebuje)", "Automatic (the one that needs you)")).tag(URL?.none)
                 ForEach(s.sessions) { session in
                     Text(session.title).tag(URL?.some(session.url))
                 }
@@ -221,16 +222,16 @@ struct OverviewSection: View {
         Grid(alignment: .trailing, horizontalSpacing: 18, verticalSpacing: 5) {
             GridRow {
                 Text("").frame(maxWidth: .infinity).gridColumnAlignment(.leading)
-                ForEach(["Sezení", "5 h", "Dnes", "Týden", "Měsíc"], id: \.self) { Text($0).bold() }
+                ForEach([L("Sezení", "Session"), "5 h", L("Dnes", "Today"), L("Týden", "Week"), L("Měsíc", "Month")], id: \.self) { Text($0).bold() }
             }
-            row("Vstup", \.input)
-            row("Čtení z cache", \.cacheRead)
-            row("Zápis do cache", \.cacheWrite)
-            row("Výstup", \.output)
+            row(L("Vstup", "Input"), \.input)
+            row(L("Čtení z cache", "Cache read"), \.cacheRead)
+            row(L("Zápis do cache", "Cache write"), \.cacheWrite)
+            row(L("Výstup", "Output"), \.output)
             Divider().gridCellUnsizedAxes(.horizontal)
-            row("Celkem", \.total)
+            row(L("Celkem", "Total"), \.total)
             GridRow {
-                Text("Odhad ceny")
+                Text(L("Odhad ceny", "Estimated cost"))
                 ForEach(columns.indices, id: \.self) { Text(Format.cost(columns[$0].cost)) }
             }
             .bold()
@@ -271,8 +272,8 @@ struct OverviewSection: View {
                 cost: $0.element)
         }
         return HStack(alignment: .top, spacing: 20) {
-            chart("Posledních 24 h", hours, unit: .hour, stride: 6, format: .dateTime.hour())
-            chart("Posledních 30 dní", days, unit: .day, stride: 7, format: .dateTime.day().month())
+            chart(L("Posledních 24 h", "Last 24 h"), hours, unit: .hour, stride: 6, format: .dateTime.hour())
+            chart(L("Posledních 30 dní", "Last 30 days"), days, unit: .day, stride: 7, format: .dateTime.day().month())
         }
     }
 
@@ -281,7 +282,7 @@ struct OverviewSection: View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title).font(.subheadline)
             Chart(bars) { bar in
-                BarMark(x: .value("Čas", bar.date, unit: unit), y: .value("USD", bar.cost))
+                BarMark(x: .value(L("Čas", "Time"), bar.date, unit: unit), y: .value("USD", bar.cost))
                     .foregroundStyle(Color(nsColor: Palette.claude))
             }
             .chartXAxis {
@@ -303,9 +304,9 @@ struct OverviewSection: View {
     private var budget: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text("Denní rozpočet")
+                Text(L("Denní rozpočet", "Daily budget"))
                 Spacer()
-                TextField("vypnuto", value: Binding(
+                TextField(L("vypnuto", "off"), value: Binding(
                     get: { Settings.dailyBudget > 0 ? Settings.dailyBudget : nil },
                     set: { Settings.dailyBudget = $0 ?? 0; model.changed() }
                 ), format: .number)
@@ -316,8 +317,8 @@ struct OverviewSection: View {
             if Settings.dailyBudget > 0 {
                 let fraction = s.today.cost / Settings.dailyBudget
                 Meter(fraction: fraction, color: fraction >= 1 ? Palette.danger : fraction >= 0.8 ? Palette.warning : Palette.claude)
-                Text("Dnes \(Format.cost(s.today.cost)) z \(Format.cost(Settings.dailyBudget)) · \(Format.percent(fraction))"
-                     + (s.budgetRunway(Settings.dailyBudget).map { " · při současném tempu vydrží \(Format.runway($0))" } ?? ""))
+                Text(L("Dnes", "Today") + " \(Format.cost(s.today.cost)) " + L("z", "of") + " \(Format.cost(Settings.dailyBudget)) · \(Format.percent(fraction))"
+                     + (s.budgetRunway(Settings.dailyBudget).map { L(" · při současném tempu vydrží ", " · at the current pace lasts ") + Format.runway($0) } ?? ""))
                     .font(.caption).foregroundStyle(.secondary)
             }
         }
@@ -325,7 +326,7 @@ struct OverviewSection: View {
 
     private var filesList: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Změněné soubory v sezení").font(.subheadline)
+            Text(L("Změněné soubory v sezení", "Files changed in the session")).font(.subheadline)
             ForEach(s.changedFiles, id: \.self) { path in
                 Text(path.replacingOccurrences(of: s.cwd.map { $0 + "/" } ?? "\u{0}", with: ""))
                     .font(.system(.caption, design: .monospaced))
@@ -346,11 +347,11 @@ struct TouchBarSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("Vyber rozložení, zapni položky a přetažením je seřaď. Změny se na Touch Baru projeví hned. ⇄ na Touch Baru přepíná mezi rozloženími.")
+            Text(L("Vyber rozložení, zapni položky a přetažením je seřaď. Změny se na Touch Baru projeví hned. ⇄ na Touch Baru přepíná mezi rozloženími.", "Pick a layout, turn items on and drag to reorder them. Changes show on the Touch Bar right away. ⇄ on the Touch Bar switches layouts."))
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
-            Picker("Rozložení", selection: $editing) {
+            Picker(L("Rozložení", "Layout"), selection: $editing) {
                 ForEach(Layout.allCases, id: \.self) { Text($0.title).tag($0) }
             }
             .pickerStyle(.segmented)
@@ -374,7 +375,7 @@ struct TouchBarSection: View {
                             Image(systemName: "minus.circle.fill").foregroundStyle(.red)
                         }
                         .buttonStyle(.plain)
-                        .help("Odebrat z Touch Baru")
+                        .help(L("Odebrat z Touch Baru", "Remove from the Touch Bar"))
                     }
                 }
                 .onMove { from, to in
@@ -385,7 +386,7 @@ struct TouchBarSection: View {
             .frame(minHeight: 300)
 
             HStack {
-                Menu("Přidat položku") {
+                Menu(L("Přidat položku", "Add item")) {
                     ForEach(BarItem.allCases.filter { !items.contains($0) }) { item in
                         Button(item.title + (item.condition.map { " (\($0))" } ?? "")) {
                             items.append(item)
@@ -395,21 +396,21 @@ struct TouchBarSection: View {
                 }
                 .frame(width: 180)
                 Spacer()
-                Button("Obnovit výchozí") {
+                Button(L("Obnovit výchozí", "Restore defaults")) {
                     LayoutItems.reset(editing)
                     items = LayoutItems.items(editing)
                     model.changed()
                 }
-                Button("Použít na Touch Baru") {
+                Button(L("Použít na Touch Baru", "Use on the Touch Bar")) {
                     model.layout = editing
                     model.onLayoutPicked?(editing)
                 }
             }
 
             Divider()
-            toggle(model, "Ukázat automaticky, když je Claude v popředí", { Settings.autoShow }, { Settings.autoShow = $0 })
-            toggle(model, "V Claudovi přes celý Touch Bar (⤓ ho zmenší)", { Settings.fullWidth }, { Settings.fullWidth = $0 })
-            Text("Mimo Claude se bar ukazuje kompaktně vedle jasu a hlasitosti, s položkami rozložení Kompaktní.")
+            toggle(model, L("Ukázat automaticky, když je Claude v popředí", "Show automatically when Claude is in front"), { Settings.autoShow }, { Settings.autoShow = $0 })
+            toggle(model, L("V Claudovi přes celý Touch Bar (⤓ ho zmenší)", "Full Touch Bar width in Claude (⤓ shrinks it)"), { Settings.fullWidth }, { Settings.fullWidth = $0 })
+            Text(L("Mimo Claude se bar ukazuje kompaktně vedle jasu a hlasitosti, s položkami rozložení Kompaktní.", "Outside Claude the bar shows compact, next to brightness and volume, with the Compact layout's items."))
                 .font(.caption).foregroundStyle(.secondary)
         }
     }
@@ -448,15 +449,15 @@ struct IntegrationSection: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Hooky Claude Code").bold()
+                    Text(L("Hooky Claude Code", "Claude Code hooks")).bold()
                     Text(model.hooksInstalled
-                         ? "Zapnuté: přesné stavy, aktuální nástroj, plán, schvalování a karty na Touch Baru (v nových sezeních)."
-                         : "Vypnuté. Stav se odhaduje z přepisů; schvalování a karty nefungují.")
+                         ? L("Zapnuté: přesné stavy, aktuální nástroj, plán, schvalování a karty na Touch Baru (v nových sezeních).", "On: exact states, current tool, plan, approvals and cards on the Touch Bar (in new sessions).")
+                         : L("Vypnuté. Stav se odhaduje z přepisů; schvalování a karty nefungují.", "Off. State is guessed from transcripts; approvals and cards don't work."))
                         .font(.caption).foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer()
-                Button(model.hooksInstalled ? "Vypnout" : "Zapnout") {
+                Button(model.hooksInstalled ? L("Vypnout", "Turn off") : L("Zapnout", "Turn on")) {
                     do {
                         if model.hooksInstalled { try HookInstaller.uninstall() } else { try HookInstaller.install() }
                         model.hookError = nil
@@ -469,26 +470,26 @@ struct IntegrationSection: View {
             if let error = model.hookError { Text(error).font(.caption).foregroundStyle(.red) }
 
             Group {
-                toggle(model, "Schvalovat z Touch Baru, když jsi mimo Claude", { Settings.approvals }, { Settings.approvals = $0 })
-                toggle(model, "Schvalovat z Touch Baru i v aplikaci Claude", { Settings.approvalsInClaude }, { Settings.approvalsInClaude = $0 })
-                toggle(model, "Ukazovat karty z Clauda (otázky, další krok, nová session)", { Settings.cards }, { Settings.cards = $0 })
-                toggle(model, "Vyskočit, když Claude dokončí práci", { Settings.popOnDone }, { Settings.popOnDone = $0 })
-                toggle(model, "Zvuk při dokončení a schvalování", { Settings.sound }, { Settings.sound = $0 })
+                toggle(model, L("Schvalovat z Touch Baru, když jsi mimo Claude", "Approve from the Touch Bar when you're outside Claude"), { Settings.approvals }, { Settings.approvals = $0 })
+                toggle(model, L("Schvalovat z Touch Baru i v aplikaci Claude", "Approve from the Touch Bar inside the Claude app too"), { Settings.approvalsInClaude }, { Settings.approvalsInClaude = $0 })
+                toggle(model, L("Ukazovat karty z Clauda (otázky, další krok, nová session)", "Show Claude's cards (questions, next step, new session)"), { Settings.cards }, { Settings.cards = $0 })
+                toggle(model, L("Vyskočit, když Claude dokončí práci", "Pop up when Claude finishes"), { Settings.popOnDone }, { Settings.popOnDone = $0 })
+                toggle(model, L("Zvuk při dokončení a schvalování", "Sound on finish and approvals"), { Settings.sound }, { Settings.sound = $0 })
             }
             .disabled(!model.hooksInstalled)
 
             Divider()
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Zpřístupnění").bold()
+                    Text(L("Zpřístupnění", "Accessibility")).bold()
                     Text(model.accessibilityTrusted
-                         ? "Povoleno: Zastavit, Nové, Push, režim, model a karty fungují."
-                         : "Potřeba pro Zastavit, Nové, Push, režim, model a karty.")
+                         ? L("Povoleno: Zastavit, Nové, Push, režim, model a karty fungují.", "Allowed: Stop, New, Push, mode, model and cards work.")
+                         : L("Potřeba pro Zastavit, Nové, Push, režim, model a karty.", "Needed for Stop, New, Push, mode, model and cards."))
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 Spacer()
                 if !model.accessibilityTrusted {
-                    Button("Povolit") {
+                    Button(L("Povolit", "Allow")) {
                         KeySender.requestTrust()
                         model.reloadStatus()
                     }
@@ -505,27 +506,28 @@ struct GitSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Tlačítko ↑ ukazuje stav tohoto repozitáře a ťuknutím pošle do otevřeného chatu „Commitni a pushni změny“.")
+            Text(L("Tlačítko ↑ ukazuje stav tohoto repozitáře a ťuknutím pošle do otevřeného chatu „Commitni a pushni změny“.", "The ↑ button shows this repository's state; a tap sends “Commit and push the changes” to the open chat."))
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
-            LabeledContent("Název na Touch Baru") {
-                TextField("Můj projekt", text: Binding(
+            LabeledContent(L("Název na Touch Baru", "Name on the Touch Bar")) {
+                TextField(L("Můj projekt", "My project"), text: Binding(
                     get: { Settings.pushName }, set: { Settings.pushName = $0; model.changed() }))
             }
-            LabeledContent("Složka repozitáře") {
+            LabeledContent(L("Složka repozitáře", "Repository folder")) {
                 HStack {
-                    TextField("~/Documents/muj-projekt", text: Binding(
+                    TextField(L("~/Documents/muj-projekt", "~/Documents/my-project"), text: Binding(
                         get: { Settings.pushRepo },
                         set: { Settings.pushRepo = ($0 as NSString).expandingTildeInPath; model.changed() }))
-                    Button("Vybrat…") { chooseFolder() }
+                    Button(L("Vybrat…", "Choose…")) { chooseFolder() }
                 }
             }
             if let git = model.snapshot.git {
-                Text("Větev \(git.branch) · " + (git.changes == 0 ? "bez změn" : "\(git.changes) necommitnutých")
-                     + (git.ahead > 0 ? " · \(git.ahead) k pushnutí" : ""))
+                Text(L("Větev", "Branch") + " \(git.branch) · "
+                     + (git.changes == 0 ? L("bez změn", "no changes") : "\(git.changes) " + L("necommitnutých", "uncommitted"))
+                     + (git.ahead > 0 ? " · \(git.ahead) " + L("k pushnutí", "to push") : ""))
                     .foregroundStyle(.secondary)
             } else if !Settings.pushRepo.isEmpty {
-                Text("Ve složce není git repozitář, nebo se ještě načítá.").foregroundStyle(.secondary)
+                Text(L("Ve složce není git repozitář, nebo se ještě načítá.", "The folder isn't a git repository, or it's still loading.")).foregroundStyle(.secondary)
             }
         }
     }
@@ -549,19 +551,24 @@ struct GeneralSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            toggle(model, "Spouštět po přihlášení", { model.launchAtLogin }, {
+            Picker(L("Jazyk", "Language"), selection: Binding(
+                get: { Settings.language }, set: { Settings.language = $0; model.changed() })) {
+                ForEach(Lang.allCases, id: \.self) { Text($0.title).tag($0) }
+            }
+            .frame(width: 280)
+            toggle(model, L("Spouštět po přihlášení", "Start at login"), { model.launchAtLogin }, {
                 LaunchAtLogin.setEnabled($0)
                 model.launchAtLogin = LaunchAtLogin.isEnabled
             })
-            Text("Okno otevřeš kdykoli znovu z Launchpadu nebo ťuknutím na číslo na Touch Baru. Po zavření okna aplikace dál běží na pozadí.")
+            Text(L("Okno otevřeš kdykoli znovu z Launchpadu nebo ťuknutím na číslo na Touch Baru. Po zavření okna aplikace dál běží na pozadí.", "Open this window again anytime from Launchpad or by tapping a number on the Touch Bar. Closing it keeps the app running in the background."))
                 .font(.caption).foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
-            Text("Tokeny a ceny se čtou z přepisů Code tabu (~/.claude/projects). Chat tokeny lokálně neukládá.")
+            Text(L("Tokeny a ceny se čtou z přepisů Code tabu (~/.claude/projects). Chat tokeny lokálně neukládá.", "Tokens and costs are read from the Code tab's transcripts (~/.claude/projects). Chat doesn't store tokens locally."))
                 .font(.caption).foregroundStyle(.secondary)
             HStack {
-                Button("Otevřít Claude") { ClaudeApp.activate() }
+                Button(L("Otevřít Claude", "Open Claude")) { ClaudeApp.activate() }
                 Spacer()
-                Button("Ukončit Claude Touch Bar") { NSApp.terminate(nil) }
+                Button(L("Ukončit Claude Touch Bar", "Quit Claude Touch Bar")) { NSApp.terminate(nil) }
             }
         }
     }

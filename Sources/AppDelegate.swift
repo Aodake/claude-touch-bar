@@ -64,7 +64,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.refresh()
         }
         model.onApproval = { [weak self] id, decision in self?.hooks.answer(id, decision) }
+        var czech = Settings.czech
         model.onSettingsChanged = { [weak self] in
+            if Settings.czech != czech {
+                czech = Settings.czech
+                self?.touchBar.languageChanged()
+            }
             self?.updateHold()
             self?.refresh()
         }
@@ -176,7 +181,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             let opened = ClaudeUI.openSession(titled: title)
             DispatchQueue.main.async {
-                if !opened { self?.touchBar.flash("Sezení „\(title)“ v postranním panelu nevidím", Palette.warning) }
+                if !opened { self?.touchBar.flash(L("Sezení „\(title)“ v postranním panelu nevidím", "Can't see session “\(title)” in the sidebar"), Palette.warning) }
             }
         }
     }
@@ -201,7 +206,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             let done = ClaudeUI.choose(model, in: "Model:")
             DispatchQueue.main.async {
-                self?.touchBar.flash(done ? "✓ Model: " + model : "Výběr modelu v Claudovi nevidím",
+                self?.touchBar.flash(done ? "✓ Model: " + model : L("Výběr modelu v Claudovi nevidím", "Can't see the model picker in Claude"),
                                      done ? Palette.done : Palette.warning)
             }
         }
@@ -216,7 +221,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 if let level = label?.components(separatedBy: " ").last {
                     self.touchBar.setEffortLabel(level)
                 } else {
-                    self.touchBar.flash("Úsilí v Claudovi nevidím", Palette.warning)
+                    self.touchBar.flash(L("Úsilí v Claudovi nevidím", "Can't see effort in Claude"), Palette.warning)
                 }
             }
         }
@@ -237,11 +242,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             DispatchQueue.main.async {
                 guard let self else { return }
                 if done {
-                    self.touchBar.flash("✓ Režim: " + mode, Palette.done)
+                    self.touchBar.flash(L("✓ Režim: ", "✓ Mode: ") + mode, Palette.done)
                     if let url = self.lastSnapshot.sessionURL { self.hookStates[url]?.mode = mode }
                     self.refresh()
                 } else {
-                    self.touchBar.flash("Přepínač režimu v Claudovi nevidím", Palette.warning)
+                    self.touchBar.flash(L("Přepínač režimu v Claudovi nevidím", "Can't see the mode picker in Claude"), Palette.warning)
                 }
             }
         }
@@ -364,9 +369,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     self.touchBar.flash("✓ " + label, Palette.done)
                     if !self.claudeFrontmost && !self.autoPresented { self.schedulePopHide(after: 2) }
                 } else if !KeySender.isTrusted {
-                    self.touchBar.flash("Povol aplikaci Zpřístupnění v Nastavení systému", Palette.warning)
+                    self.touchBar.flash(L("Povol aplikaci Zpřístupnění v Nastavení systému", "Allow the app in System Settings → Accessibility"), Palette.warning)
                 } else {
-                    self.touchBar.flash("Tlačítko „\(label)“ nevidím, otevři ten chat v Claudovi", Palette.warning)
+                    self.touchBar.flash(L("Tlačítko „\(label)“ nevidím, otevři ten chat v Claudovi", "Can't see the “\(label)” button, open that chat in Claude"), Palette.warning)
                 }
             }
         }
@@ -387,7 +392,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             popHide?.cancel()
             touchBar.present()
         } else if list.isEmpty && !claudeFrontmost && !autoPresented {
-            // After the 1.5 s "✓ Povoleno" confirmation.
+            // After the 1.5 s "✓ Allowed" confirmation.
             schedulePopHide(after: 2)
         }
         refresh()
@@ -422,7 +427,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if let finished {
             touchBar.needsAttention = true
             Sounds.play("Glass")
-            // "✓ Hotovo: <session> │ Otevřít" — one tap takes you to that chat.
+            // "✓ Done: <session> │ Open" — one tap takes you to that chat.
             if Settings.popOnDone && card == nil && hooks.approvals.isEmpty {
                 setCard(.finished(finished), sound: false)
             }

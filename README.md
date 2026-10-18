@@ -15,7 +15,7 @@ Progress, spend and controls for the Claude desktop app, right on your MacBook's
 - **Controls:** permission mode, model and effort, session switching, Stop, New, Compact and a Commit + push button.
 - **Your own layout:** pick and reorder items across three layouts in the app's window.
 
-> The interface is in Czech for now.
+- **English and Czech:** switch the language in the window (General → Language); by default it follows macOS.
 
 ## Requirements
 
@@ -35,7 +35,7 @@ The script builds the app, copies it to `~/Applications`, turns on launch at log
 
 Then:
 
-1. **Turn on hooks** in the window (Napojení na Claude → Zapnout). They make the status exact and let you approve and answer from the Touch Bar.
+1. **Turn on hooks** in the window (Claude integration → Turn on). They make the status exact and let you approve and answer from the Touch Bar.
 2. **Allow Accessibility** (System Settings → Privacy & Security → Accessibility). It's needed to control Claude's window.
 3. *Optional:* create a code-signing certificate named **ClaudeTouchBar Local** (Keychain Access → Certificate Assistant → Create a Certificate, type *Code Signing*). `build.sh` signs with it, so the Accessibility permission survives rebuilds. Without it the app is signed ad hoc and needs the permission again after every build.
 
@@ -70,7 +70,7 @@ Open it from Launchpad or Spotlight ("Claude Touch Bar"), or by tapping the numb
 | Chart | spend per 5 minutes over the last hour |
 | Changed files | how many files Claude edited in the session (list in the window) |
 | Waiting sessions | `● 2 waiting`; tap to jump to the first |
-| Commit and push | `↑ My project ●4 ↑1`; sends a "commit and push" request ("Commitni a pushni změny") to the open chat |
+| Commit and push | `↑ My project ●4 ↑1`; sends "Commit and push the changes" to the open chat |
 | Model picker | Opus / Fable / Sonnet / Haiku and "Effort ▸" (each tap moves effort one level) |
 | ⋯ | Allow / Deny, Stop, New, Push, permission mode, model, sessions, details |
 

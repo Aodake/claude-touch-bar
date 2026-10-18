@@ -11,41 +11,41 @@ enum BarItem: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .state: return "Stav a čas"
-        case .plan: return "Postup plánu"
-        case .context: return "Kontext"
-        case .session: return "Útrata sezení"
-        case .fiveHours: return "Útrata 5 h"
-        case .today: return "Útrata dnes"
-        case .week: return "Útrata týden"
-        case .month: return "Útrata měsíc"
-        case .tokens: return "Tokeny ▲▼"
-        case .cost: return "Cena sezení"
-        case .rate: return "Tempo $/h"
-        case .active: return "Aktivní čas dnes"
-        case .graph: return "Graf poslední hodiny"
-        case .model: return "Název modelu"
-        case .files: return "Změněné soubory"
-        case .waiting: return "Čekající sezení"
-        case .compact: return "Zkomprimovat kontext"
-        case .push: return "Commit a push"
-        case .modelPicker: return "Přepínač modelu"
-        case .wide: return "Velký kontext (Minimal)"
-        case .switcher: return "Přepnout rozložení ⇄"
-        case .more: return "Akce ⋯"
-        case .collapse: return "Zmenšit ⤓"
+        case .state: return L("Stav a čas", "State and time")
+        case .plan: return L("Postup plánu", "Plan progress")
+        case .context: return L("Kontext", "Context")
+        case .session: return L("Útrata sezení", "Session spend")
+        case .fiveHours: return L("Útrata 5 h", "5 h spend")
+        case .today: return L("Útrata dnes", "Today's spend")
+        case .week: return L("Útrata týden", "Week's spend")
+        case .month: return L("Útrata měsíc", "Month's spend")
+        case .tokens: return L("Tokeny ▲▼", "Tokens ▲▼")
+        case .cost: return L("Cena sezení", "Session cost")
+        case .rate: return L("Tempo $/h", "Rate $/h")
+        case .active: return L("Aktivní čas dnes", "Active time today")
+        case .graph: return L("Graf poslední hodiny", "Last hour graph")
+        case .model: return L("Název modelu", "Model name")
+        case .files: return L("Změněné soubory", "Changed files")
+        case .waiting: return L("Čekající sezení", "Waiting sessions")
+        case .compact: return L("Zkomprimovat kontext", "Compact context")
+        case .push: return L("Commit a push", "Commit and push")
+        case .modelPicker: return L("Přepínač modelu", "Model picker")
+        case .wide: return L("Velký kontext (Minimal)", "Large context (Minimal)")
+        case .switcher: return L("Přepnout rozložení ⇄", "Switch layout ⇄")
+        case .more: return L("Akce ⋯", "Actions ⋯")
+        case .collapse: return L("Zmenšit ⤓", "Shrink ⤓")
         }
     }
 
     /// When the item only shows up while it has something to say.
     var condition: String? {
         switch self {
-        case .plan: return "jen když má Claude plán"
-        case .push: return "jen s repozitářem pro Push"
-        case .compact: return "jen nad 80 % kontextu"
-        case .waiting: return "jen když něco čeká"
-        case .files: return "jen když Claude něco změnil"
-        case .collapse: return "jen přes celou šířku"
+        case .plan: return L("jen když má Claude plán", "only when Claude has a plan")
+        case .push: return L("jen s repozitářem pro Push", "only with a Push repository")
+        case .compact: return L("jen nad 80 % kontextu", "only above 80% context")
+        case .waiting: return L("jen když něco čeká", "only when something waits")
+        case .files: return L("jen když Claude něco změnil", "only when Claude changed something")
+        case .collapse: return L("jen přes celou šířku", "only at full width")
         default: return nil
         }
     }

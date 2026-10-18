@@ -192,7 +192,7 @@ final class HookServer {
             HookLog.write((details + ["→ čeká na Touch Bar"]).joined(separator: " "))
             let suggestions = obj["permission_suggestions"]
             let request = ApprovalRequest(
-                id: UUID(), transcriptURL: transcript, toolName: toolName ?? "Nástroj",
+                id: UUID(), transcriptURL: transcript, toolName: toolName ?? L("Nástroj", "Tool"),
                 summary: summary ?? "", canAlwaysAllow: (suggestions as? [Any])?.isEmpty == false,
                 received: Date())
             lock.withLock { pending[request.id] = Pending(request: request, fd: fd, suggestions: suggestions) }
@@ -232,7 +232,7 @@ final class HookServer {
                 body["updatedPermissions"] = suggestions
             }
         case .deny:
-            body = ["behavior": "deny", "message": "Zamítnuto z Touch Baru."]
+            body = ["behavior": "deny", "message": L("Zamítnuto z Touch Baru.", "Denied from the Touch Bar.")]
         }
         let reply: [String: Any] = ["hookSpecificOutput": ["hookEventName": "PermissionRequest", "decision": body]]
         if let data = try? JSONSerialization.data(withJSONObject: reply) {
@@ -360,7 +360,7 @@ enum HookClient {
     /// `ClaudeTouchBar --answer allow|always|deny` answers the oldest request.
     static func answer(_ decision: String) -> Never {
         guard let fd = connectToApp() else {
-            print("Aplikace neběží.")
+            print(L("Aplikace neběží.", "The app isn't running."))
             exit(1)
         }
         let body = Data(#"{"hook_event_name":"ClaudeTouchBarAnswer","decision":"\#(decision)"}"#.utf8)

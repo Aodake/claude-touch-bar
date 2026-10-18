@@ -14,6 +14,7 @@ Průběh, útrata a ovládání desktopové aplikace Claude přímo na Touch Bar
 - **Útrata:** tokeny a orientační cena za sezení, 5 h, den, týden a měsíc, tempo $/h, graf a denní rozpočet.
 - **Ovládání:** režim oprávnění, model a úsilí, přepínání sezení, Zastavit, Nové, Zkomprimovat a tlačítko Commit + push.
 - **Vlastní rozložení:** v okně aplikace si vybereš a přetažením seřadíš položky ve třech rozloženích.
+- **Čeština a angličtina:** jazyk přepneš v okně (Obecné → Jazyk); výchozí se řídí jazykem macOS.
 
 ## Požadavky
 

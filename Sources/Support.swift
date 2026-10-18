@@ -5,8 +5,8 @@ enum Layout: Int, CaseIterable {
 
     var title: String {
         switch self {
-        case .compact: return "Kompaktní"
-        case .overview: return "Přehled"
+        case .compact: return L("Kompaktní", "Compact")
+        case .overview: return L("Přehled", "Overview")
         case .minimal: return "Minimal"
         }
     }
@@ -14,8 +14,45 @@ enum Layout: Int, CaseIterable {
     var next: Layout { Layout(rawValue: (rawValue + 1) % Layout.allCases.count) ?? .compact }
 }
 
+/// The app's UI language; `.system` is Czech when macOS prefers Czech.
+enum Lang: String, CaseIterable {
+    case system, cs, en
+
+    var title: String {
+        switch self {
+        case .system: return L("Podle systému", "System")
+        case .cs: return "Čeština"
+        case .en: return "English"
+        }
+    }
+}
+
+/// The Czech or the English text, whichever the UI language is.
+func L(_ czech: String, _ english: String) -> String {
+    Settings.czech ? czech : english
+}
+
 enum Settings {
     private static let defaults = UserDefaults.standard
+
+    static var language: Lang {
+        get { Lang(rawValue: defaults.string(forKey: "language") ?? "") ?? .system }
+        set {
+            defaults.set(newValue.rawValue, forKey: "language")
+            czech = resolveCzech()
+        }
+    }
+
+    /// Cached, since every Touch Bar redraw asks.
+    private(set) static var czech = resolveCzech()
+
+    private static func resolveCzech() -> Bool {
+        switch language {
+        case .cs: return true
+        case .en: return false
+        case .system: return Locale.preferredLanguages.first?.hasPrefix("cs") ?? false
+        }
+    }
 
     static var layout: Layout {
         get { Layout(rawValue: defaults.integer(forKey: "layout")) ?? .compact }
@@ -192,11 +229,11 @@ extension Format {
         total < 60 ? "\(total) min" : "\(total / 60) h \(total % 60) min"
     }
 
-    /// "~40 min", "~2,5 h", "došel".
+    /// "~40 min", "~2,5 h" ("~2.5 h"), "došel" ("used up").
     static func runway(_ hours: Double) -> String {
-        if hours <= 0 { return "došel" }
+        if hours <= 0 { return L("došel", "used up") }
         if hours < 1 { return "~\(max(1, Int(hours * 60))) min" }
-        if hours < 10 { return "~" + String(format: "%.1f", hours).replacingOccurrences(of: ".", with: ",") + " h" }
+        if hours < 10 { return "~" + String(format: "%.1f", hours).replacingOccurrences(of: ".", with: L(",", ".")) + " h" }
         return "~\(Int(hours)) h"
     }
 }
@@ -279,7 +316,7 @@ enum Format {
     }
 
     static func percent(_ fraction: Double) -> String {
-        "\(Int((fraction * 100).rounded())) %"
+        "\(Int((fraction * 100).rounded()))" + L(" %", "%")
     }
 }
 
