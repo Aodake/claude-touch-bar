@@ -58,12 +58,13 @@ if arguments.contains("--install-hooks") || arguments.contains("--uninstall-hook
 // the numbers without a Touch Bar.
 if arguments.contains("--dump") {
     let s = UsageStore().scanNow()
+    ExchangeRate.refreshIfNeeded(wait: true)
     func line(_ label: String, _ t: Tokens) {
         print("\(label): " + L("vstup", "input") + " \(Format.tokens(t.input)), "
             + L("cache čtení", "cache read") + " \(Format.tokens(t.cacheRead)), "
             + L("cache zápis", "cache write") + " \(Format.tokens(t.cacheWrite)), "
             + L("výstup", "output") + " \(Format.tokens(t.output)), "
-            + L("celkem", "total") + " \(Format.tokens(t.total)), \(Format.cost(t.cost))")
+            + L("celkem", "total") + " \(Format.tokens(t.total)), \(Format.price(t.cost))")
     }
     print("Touch Bar API: \(SystemTouchBar.isSupported ? L("k dispozici", "available") : L("nedostupné", "unavailable"))")
     print(L("Sezení", "Session") + ": \(s.title ?? "-") · \(s.project ?? "-") · \(s.modelName) · \(s.activity)")
@@ -75,6 +76,9 @@ if arguments.contains("--dump") {
     line(L("Měsíc", "Month"), s.month)
     print(L("Sezení za poslední 3 h", "Sessions in the last 3 h") + ": \(s.sessions.map { "\($0.title) (\($0.activity))" }.joined(separator: ", "))")
     print(L("Posledních 60 min po 5 min", "Last 60 min in 5 min steps") + ": \(s.burn.map { Format.cost($0) }.joined(separator: " "))")
+    if Settings.showsCZK {
+        print("Kurz USD/CZK: " + String(format: "%.3f", ExchangeRate.usdCZK).replacingOccurrences(of: ".", with: ",") + (ExchangeRate.date.map { " (ČNB \($0))" } ?? " (výchozí)"))
+    }
     print(L("Hooky", "Hooks") + ": " + (HookInstaller.isInstalled ? L("zapnuté", "on") : L("vypnuté", "off")))
     if let cwd = s.cwd {
         if let git = Git.status(at: cwd) {

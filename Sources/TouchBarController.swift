@@ -602,7 +602,7 @@ final class TouchBarController: NSObject, NSTouchBarDelegate {
 
         set(ID.tokens, [("▲", Palette.dim), (Format.tokens(s.session.totalIn) + " ", .white),
                         ("▼", Palette.dim), (Format.tokens(s.session.output), .white)])
-        set(ID.cost, [(Format.cost(s.session.cost), budgetColor)])
+        set(ID.cost, [(Format.cost(s.session.cost), budgetColor), (Format.czkSuffix(s.session.cost), Palette.dim)])
         set(ID.model, [(s.modelName, Palette.dim)])
         buttons[ID.graph]?.image = sparkline(s.burn, size: NSSize(width: 64, height: 20))
 
@@ -612,12 +612,12 @@ final class TouchBarController: NSObject, NSTouchBarDelegate {
             buttons[ID.today]?.image = progressImage(fraction, width: 36, color: budgetColor)
             buttons[ID.today]?.imagePosition = .imageTrailing
             set(ID.today, [(L("Dnes ", "Today "), Palette.dim), (Format.cost(s.today.cost), budgetColor),
-                           ("/" + Format.cost(Settings.dailyBudget)
+                           (Format.czkSuffix(s.today.cost) + "/" + Format.cost(Settings.dailyBudget)
                             + (s.budgetRunway(Settings.dailyBudget).map { " " + Format.runway($0) } ?? "") + " ",
                             Palette.dim)])
         } else {
             buttons[ID.today]?.image = nil
-            set(ID.today, summary(L("Dnes", "Today"), s.today))
+            set(ID.today, summary(L("Dnes", "Today"), s.today, czk: true))
         }
 
         buttons[ID.wide]?.image = progressImage(s.contextFraction, width: 140, color: ctxColor)
@@ -653,8 +653,8 @@ final class TouchBarController: NSObject, NSTouchBarDelegate {
         }
 
         set(ID.week, summary(L("Týden", "Week"), s.week))
-        set(ID.month, summary(L("Měsíc", "Month"), s.month))
-        set(ID.rate, [(Format.cost(s.hourlyRate), .white), ("/h", Palette.dim)])
+        set(ID.month, summary(L("Měsíc", "Month"), s.month, czk: true))
+        set(ID.rate, [(Format.cost(s.hourlyRate), .white), ("/h" + Format.czkSuffix(s.hourlyRate), Palette.dim)])
         set(ID.active, [("⏱ ", Palette.dim), (Format.minutes(s.activeMinutes), .white)])
         set(ID.files, [(" \(s.changedFiles.count) ", .white), (s.changedFiles.count == 1 ? L("soubor", "file") : L("souborů", "files"), Palette.dim)])
         set(ID.waiting, [("● ", Palette.waiting), ("\(s.waitingCount) " + L("čeká", "waiting"), .white)])
@@ -712,8 +712,11 @@ final class TouchBarController: NSObject, NSTouchBarDelegate {
         return .white
     }
 
-    private func summary(_ label: String, _ t: Tokens) -> [(String, NSColor)] {
-        [(label + " ", Palette.dim), (Format.tokens(t.total), .white), (" " + Format.cost(t.cost), Palette.dim)]
+    /// Kč only on the few items with room for it (today, month, cost, rate),
+    /// so the overview still fits next to its four summaries.
+    private func summary(_ label: String, _ t: Tokens, czk: Bool = false) -> [(String, NSColor)] {
+        [(label + " ", Palette.dim), (Format.tokens(t.total), .white),
+         (" " + Format.cost(t.cost) + (czk ? Format.czkSuffix(t.cost) : ""), Palette.dim)]
     }
 
     private func truncate(_ text: String, _ length: Int) -> String {

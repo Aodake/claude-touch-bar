@@ -129,7 +129,7 @@ struct OverviewSection: View {
             Divider()
             tokenTable
             HStack(spacing: 24) {
-                stat(L("Tempo", "Rate"), Format.cost(s.hourlyRate) + "/h")
+                stat(L("Tempo", "Rate"), Format.cost(s.hourlyRate) + "/h" + (Settings.showsCZK ? " (≈\u{00A0}" + Format.czk(s.hourlyRate) + ")" : ""))
                 stat(L("Aktivní dnes", "Active today"), Format.minutes(s.activeMinutes))
                 stat(L("Změněné soubory", "Changed files"), "\(s.changedFiles.count)")
             }
@@ -235,6 +235,13 @@ struct OverviewSection: View {
                 ForEach(columns.indices, id: \.self) { Text(Format.cost(columns[$0].cost)) }
             }
             .bold()
+            // The five columns have no room for "$27 (≈ 620 Kč)", so Kč gets its own row.
+            if Settings.showsCZK {
+                GridRow {
+                    Text("≈ v Kč").foregroundStyle(.secondary)
+                    ForEach(columns.indices, id: \.self) { Text(Format.czk(columns[$0].cost)).foregroundStyle(.secondary) }
+                }
+            }
         }
         .monospacedDigit()
     }
@@ -317,7 +324,7 @@ struct OverviewSection: View {
             if Settings.dailyBudget > 0 {
                 let fraction = s.today.cost / Settings.dailyBudget
                 Meter(fraction: fraction, color: fraction >= 1 ? Palette.danger : fraction >= 0.8 ? Palette.warning : Palette.claude)
-                Text(L("Dnes", "Today") + " \(Format.cost(s.today.cost)) " + L("z", "of") + " \(Format.cost(Settings.dailyBudget)) · \(Format.percent(fraction))"
+                Text(L("Dnes", "Today") + " \(Format.price(s.today.cost)) " + L("z", "of") + " \(Format.price(Settings.dailyBudget)) · \(Format.percent(fraction))"
                      + (s.budgetRunway(Settings.dailyBudget).map { L(" · při současném tempu vydrží ", " · at the current pace lasts ") + Format.runway($0) } ?? ""))
                     .font(.caption).foregroundStyle(.secondary)
             }
@@ -556,6 +563,17 @@ struct GeneralSection: View {
                 ForEach(Lang.allCases, id: \.self) { Text($0.title).tag($0) }
             }
             .frame(width: 280)
+            if Settings.czech {
+                toggle(model, "Ukazovat Kč", { Settings.showCZK }, {
+                    Settings.showCZK = $0
+                    ExchangeRate.refreshIfNeeded()
+                })
+                Text("Kurz USD/CZK \(String(format: "%.3f", ExchangeRate.usdCZK).replacingOccurrences(of: ".", with: ",")) Kč"
+                     + (ExchangeRate.date.map { " (ČNB, \($0))" } ?? " (výchozí, kurz ČNB zatím nestažen)")
+                     + ". Jediné síťové spojení aplikace: jednou za pár hodin stáhne veřejný kurzovní lístek z cnb.cz, nic o tobě neposílá. Vypnutím se stahování zastaví.")
+                    .font(.caption).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             toggle(model, L("Spouštět po přihlášení", "Start at login"), { model.launchAtLogin }, {
                 LaunchAtLogin.setEnabled($0)
                 model.launchAtLogin = LaunchAtLogin.isEnabled

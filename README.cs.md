@@ -65,7 +65,7 @@ Otevřeš ho z Launchpadu nebo Spotlightu („Claude Touch Bar“), případně 
 - **Touch Bar:** editor tří rozložení (Kompaktní, Přehled, Minimal). Položky zapneš, vypneš a přetažením seřadíš. ⇄ mezi rozloženími přepíná přímo na Touch Baru.
 - **Napojení na Claude:** hooky, schvalování, karty, zvuky, oprávnění Zpřístupnění.
 - **Git a Push:** název a složka repozitáře pro tlačítko ↑.
-- **Obecné:** spouštění po přihlášení, ukončení.
+- **Obecné:** jazyk, zobrazení v Kč s aktuálním kurzem, spouštění po přihlášení, ukončení.
 
 ## Položky Touch Baru
 
@@ -96,9 +96,13 @@ Přidají se do `~/.claude/settings.json`. Ostatní hooky zůstanou a záloha se
 
 ## Odkud jsou data a co stojí
 
-Code tab zapisuje přepisy sezení do `~/.claude/projects/**.jsonl` a aplikace je jen čte. Nic neposílá po síti a nesahá na přihlašovací údaje. Chat tab tokeny lokálně neukládá, takže se nepočítá.
+Code tab zapisuje přepisy sezení do `~/.claude/projects/**.jsonl` a aplikace je jen čte. Nesahá na přihlašovací údaje a žádná tvoje data nikam neposílá. Jediné síťové spojení je stažení veřejného kurzu USD/CZK z ČNB (viz níže). Chat tab tokeny lokálně neukládá, takže se nepočítá.
 
 Cena v $ je **orientační přepočet podle veřejného API ceníku** (vstup, výstup, zápis a čtení z cache, podle modelu). U předplatného (Pro, Max, Team, Enterprise) se po tokenech neplatí. Číslo ukazuje, kolik by stejná práce stála přes API. Ceník je v `Sources/Pricing.swift`.
+
+Velká čísla se automaticky převádějí na jednotky: 45 tis., 1,2 mil., 3 mld., 2 bil. (anglicky 45k, 1.2M, 3B, 2T; anglické *billion* je česká miliarda).
+
+V češtině se za cenou v $ ukazuje i přepočet na Kč, např. „$27 (≈ 586 Kč)“. V okně u každé částky, na Touch Baru jen u položek Dnes, Měsíc, Cena sezení a Tempo, aby se rozložení vešla. Kurz je denní kurz ČNB ([denni_kurz.txt](https://www.cnb.cz/cs/financni-trhy/devizovy-trh/kurzy-devizoveho-trhu/kurzy-devizoveho-trhu/denni_kurz.txt)), stahuje se nejvýš jednou za 6 hodin. Je to jen stažení veřejného souboru, nic o tobě se neodesílá. Poslední kurz se pamatuje, bez něj platí pevný výchozí. Když v Obecných vypneš *Ukazovat Kč*, aplikace po síti nekomunikuje vůbec; v anglickém rozhraní kurz nestahuje nikdy.
 
 ## Užitečné příkazy
 
@@ -126,6 +130,7 @@ Cena v $ je **orientační přepočet podle veřejného API ceníku** (vstup, v�
 | `Sources/BarItems.swift` | položky a rozložení |
 | `Sources/SystemTouchBar.swift` | neveřejné API Touch Baru |
 | `Sources/Pricing.swift` | ceník modelů |
+| `Sources/ExchangeRate.swift` | kurz USD/CZK z ČNB pro zobrazení v Kč |
 
 ## Technická poznámka
 

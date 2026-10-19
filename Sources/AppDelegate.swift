@@ -143,6 +143,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Data
 
     private func refresh() {
+        ExchangeRate.refreshIfNeeded()
         store.refresh(selected: selectedSession, hooks: hookStates) { [weak self] snapshot in
             self?.apply(snapshot)
         }

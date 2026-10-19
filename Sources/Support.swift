@@ -118,6 +118,14 @@ enum Settings {
         set { defaults.set(max(0, newValue), forKey: "dailyBudget") }
     }
 
+    /// Add the Kč equivalent after $ amounts while the UI is Czech.
+    static var showCZK: Bool {
+        get { bool("showCZK", default: true) }
+        set { defaults.set(newValue, forKey: "showCZK") }
+    }
+
+    static var showsCZK: Bool { czech && showCZK }
+
     private static func bool(_ key: String, default value: Bool) -> Bool {
         defaults.object(forKey: key) as? Bool ?? value
     }
@@ -290,15 +298,31 @@ enum LaunchAtLogin {
 }
 
 enum Format {
+    /// Scaled to the size with the UI language's unit: "1,2 mil." / "1.2M",
+    /// "45 tis." / "45k", "3 mld." / "3B" (an English billion is a Czech
+    /// miliarda), "bil." / "T".
     static func tokens(_ n: Int) -> String {
-        switch n {
-        case ..<1_000: return "\(n)"
-        case ..<10_000: return String(format: "%.1fk", Double(n) / 1_000)
-        case ..<1_000_000: return "\(n / 1_000)k"
-        case ..<10_000_000 where n % 1_000_000 == 0: return "\(n / 1_000_000)M"
-        case ..<10_000_000: return String(format: "%.1fM", Double(n) / 1_000_000)
-        default: return "\(n / 1_000_000)M"
+        guard abs(n) >= 1_000 else { return "\(n)" }
+        let units = Settings.czech ? ["tis.", "mil.", "mld.", "bil."] : ["k", "M", "B", "T"]
+        var value = Double(n)
+        var index = -1
+        while index < units.count - 1 && abs(value) >= 1_000 {
+            value /= 1_000
+            index += 1
         }
+        // One decimal below 10, whole numbers above; 999.7k rounds up to 1M.
+        var rounded = abs(value) < 10 ? (value * 10).rounded() / 10 : value.rounded()
+        if abs(rounded) >= 1_000 && index < units.count - 1 {
+            rounded /= 1_000
+            index += 1
+        }
+        return number(rounded) + (Settings.czech ? "\u{00A0}" : "") + units[index]
+    }
+
+    /// "1,2" / "1.2", without a trailing ",0".
+    private static func number(_ value: Double) -> String {
+        if value == value.rounded() { return "\(Int(value))" }
+        return String(format: "%.1f", value).replacingOccurrences(of: ".", with: L(",", "."))
     }
 
     static func cost(_ usd: Double) -> String {
@@ -307,6 +331,29 @@ enum Format {
         case ..<100: return String(format: "$%.1f", usd)
         default: return String(format: "$%.0f", usd)
         }
+    }
+
+    /// "620 Kč", "4,6 Kč", "12 345 Kč" at the ČNB rate.
+    static func czk(_ usd: Double) -> String {
+        let kc = usd * ExchangeRate.usdCZK
+        if kc < 10 { return String(format: "%.1f", kc).replacingOccurrences(of: ".", with: ",") + "\u{00A0}Kč" }
+        var digits = String(Int(kc.rounded()))
+        var grouped = ""
+        while digits.count > 3 {
+            grouped = "\u{00A0}" + digits.suffix(3) + grouped
+            digits = String(digits.dropLast(3))
+        }
+        return digits + grouped + "\u{00A0}Kč"
+    }
+
+    /// "$27 (≈ 620 Kč)" when Kč is on, otherwise just "$27".
+    static func price(_ usd: Double) -> String {
+        Settings.showsCZK ? cost(usd) + " (≈\u{00A0}" + czk(usd) + ")" : cost(usd)
+    }
+
+    /// The Touch Bar's shorter "(620 Kč)"; empty when Kč is off.
+    static func czkSuffix(_ usd: Double) -> String {
+        Settings.showsCZK ? " (" + czk(usd) + ")" : ""
     }
 
     static func duration(_ seconds: TimeInterval) -> String {

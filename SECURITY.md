@@ -16,7 +16,7 @@ Only the latest release and the `main` branch get security fixes.
 
 Claude Touch Bar is a local-only utility. In short:
 
-- **No network access.** The app makes no network requests at all: no telemetry, no analytics, no update checks. Everything stays on your Mac.
+- **One network request, and you can turn it off.** No telemetry, no analytics, no update checks, and none of your data ever leaves your Mac. The only request: with the Czech UI and *Ukazovat Kč* (Show Kč) on, the app downloads the Czech National Bank's public USD/CZK rate file (`https://www.cnb.cz/…/denni_kurz.txt`) at most every 6 hours, without cookies and without sending anything about you. Turn *Ukazovat Kč* off in General (or use the English UI) and the app makes no network requests at all.
 - **Reads transcripts, read-only.** Token counts, cost estimates and session status come from the transcript files the Claude desktop app writes to `~/.claude/projects/**.jsonl`. The app only reads them and never changes them.
 - **No credentials.** The app never reads, stores or sends your Claude login, API keys, tokens or anything from the Keychain.
 - **Hooks over a local Unix socket.** If you turn on hooks, the app adds entries to `~/.claude/settings.json` (your other hooks stay, and a backup is saved as `settings.json.bak-claudetouchbar`). The hooks run the app's own binary, which passes events to the running app over a Unix domain socket in `~/Library/Application Support/ClaudeTouchBar/`. The socket isn't reachable from the network. Hooks can be removed at any time from the app window or with `--uninstall-hooks`.

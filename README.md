@@ -66,7 +66,7 @@ Open it from Launchpad or Spotlight ("Claude Touch Bar"), or by tapping the numb
 - **Touch Bar:** an editor for the three layouts (Compact, Overview, Minimal). Turn items on and off and drag to reorder. ⇄ switches layouts on the Touch Bar itself.
 - **Claude integration:** hooks, approvals, cards, sounds, Accessibility permission.
 - **Git and Push:** name and folder of the repository for the ↑ button.
-- **General:** launch at login, quit.
+- **General:** language, Kč display (Czech UI only), launch at login, quit.
 
 ## Touch Bar items
 
@@ -97,9 +97,13 @@ They're added to `~/.claude/settings.json`. Your other hooks stay, and a backup 
 
 ## Where the numbers come from
 
-The Code tab writes session transcripts to `~/.claude/projects/**.jsonl`, and the app only reads them. It sends nothing over the network and never touches your credentials. The Chat tab doesn't store token counts locally, so it isn't counted.
+The Code tab writes session transcripts to `~/.claude/projects/**.jsonl`, and the app only reads them. It never touches your credentials and sends none of your data anywhere. Its only network request downloads the Czech National Bank's public USD/CZK rate (see below). The Chat tab doesn't store token counts locally, so it isn't counted.
 
 The $ figure is an **estimate at public API prices** (input, output, cache writes and reads, per model). Subscriptions (Pro, Max, Team, Enterprise) aren't billed per token. The number shows what the same work would cost through the API. Prices live in `Sources/Pricing.swift`.
+
+Large numbers scale automatically: 45k, 1.2M, 3B, 2T (in Czech 45 tis., 1,2 mil., 3 mld., 2 bil.).
+
+With the Czech UI, $ amounts also show their Kč equivalent, e.g. „$27 (≈ 586 Kč)“. In the window it's next to every amount; on the Touch Bar only on Today, Month, Session cost and Rate, so the layouts still fit. The rate comes from the Czech National Bank's daily fixing ([denni_kurz.txt](https://www.cnb.cz/cs/financni-trhy/devizovy-trh/kurzy-devizoveho-trhu/kurzy-devizoveho-trhu/denni_kurz.txt)), fetched at most every 6 hours; that's a plain download of a public file, nothing about you is sent. The last rate is kept, and without one a fixed default is used. Turn off *Ukazovat Kč* in General and the app makes no network requests at all; with the English UI it never fetches.
 
 ## Handy commands
 
@@ -127,6 +131,7 @@ The $ figure is an **estimate at public API prices** (input, output, cache write
 | `Sources/BarItems.swift` | items and layouts |
 | `Sources/SystemTouchBar.swift` | private Touch Bar API |
 | `Sources/Pricing.swift` | model price table |
+| `Sources/ExchangeRate.swift` | USD/CZK rate from ČNB for the Kč display |
 
 ## Technical note
 
