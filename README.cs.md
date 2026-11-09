@@ -11,7 +11,7 @@ Průběh, útrata a ovládání desktopové aplikace Claude přímo na Touch Bar
 - **Živý stav:** ✳ pracuje, ● čeká na tebe, ✓ hotovo, s časem tahu a aktuálním nástrojem.
 - **Schvalování z Touch Baru:** Povolit / Zamítnout bez přepnutí do Clauda.
 - **Karty:** otázky, box dalšího kroku a nabídky nové session se odklikávají přímo na Touch Baru, i když jsi v jiné aplikaci.
-- **Útrata:** tokeny a orientační cena za sezení, 5 h, den, týden a měsíc, tempo $/h, graf a denní rozpočet.
+- **Útrata:** tokeny a orientační cena za sezení, 5 h, den, týden, měsíc a celkem za celou dobu, tempo $/h, graf a denní rozpočet.
 - **Ovládání:** režim oprávnění, model a úsilí, přepínání sezení, Zastavit, Nové, Zkomprimovat a tlačítko Commit + push.
 - **Vlastní rozložení:** v okně aplikace si vybereš a přetažením seřadíš položky ve třech rozloženích.
 - **Čeština a angličtina:** jazyk přepneš v okně (Obecné → Jazyk); výchozí se řídí jazykem macOS.
@@ -61,7 +61,7 @@ Skript aplikaci sestaví, zkopíruje do `~/Applications`, zapne spouštění po 
 
 Otevřeš ho z Launchpadu nebo Spotlightu („Claude Touch Bar“), případně ťuknutím na číslo na Touch Baru. Po zavření okna aplikace dál běží na pozadí.
 
-- **Přehled:** stav, schválení, kontext, postup plánu, útrata (sezení / 5 h / dnes / týden / měsíc), tempo $/h, aktivní čas, grafy za 24 h a 30 dní, denní rozpočet s odhadem výdrže, změněné soubory.
+- **Přehled:** stav, schválení, kontext, postup plánu, útrata (sezení / 5 h / dnes / týden / měsíc / celkem od prvního dne), tempo $/h, aktivní čas, grafy za 24 h a 30 dní, denní rozpočet s odhadem výdrže, změněné soubory.
 - **Touch Bar:** editor tří rozložení (Kompaktní, Přehled, Minimal). Položky zapneš, vypneš a přetažením seřadíš. ⇄ mezi rozloženími přepíná přímo na Touch Baru.
 - **Napojení na Claude:** hooky, schvalování, karty, zvuky, oprávnění Zpřístupnění.
 - **Git a Push:** název a složka repozitáře pro tlačítko ↑.
@@ -76,6 +76,7 @@ Otevřeš ho z Launchpadu nebo Spotlightu („Claude Touch Bar“), případně 
 | Kontext | zaplnění kontextu, od 70 % oranžové, od 90 % červené |
 | Zkomprimovat | nad 80 % kontextu; pošle `/compact` |
 | Útrata | sezení, 5 h, dnes, týden, měsíc (tokeny a $) |
+| Celkem | tokeny a $ za celou dobu používání; v rozložení Přehled je zapnutá a při nedostatku místa ustoupí hned po 5 h |
 | Tempo $/h, Aktivní čas | útrata za poslední hodinu, kolik minut dnes Claude pracoval |
 | Graf | útrata po 5 minutách za poslední hodinu |
 | Změněné soubory | kolik souborů Claude v sezení upravil (seznam je v okně) |
@@ -97,6 +98,8 @@ Přidají se do `~/.claude/settings.json`. Ostatní hooky zůstanou a záloha se
 ## Odkud jsou data a co stojí
 
 Code tab zapisuje přepisy sezení do `~/.claude/projects/**.jsonl` a aplikace je jen čte. Nesahá na přihlašovací údaje a žádná tvoje data nikam neposílá. Jediné síťové spojení je stažení veřejného kurzu USD/CZK z ČNB (viz níže). Chat tab tokeny lokálně neukládá, takže se nepočítá.
+
+Claude Code staré přepisy maže (`cleanupPeriodDays`, výchozí 30 dní). Aby **Celkem** nezmizelo s nimi, aplikace si denní součty tokenů a ceny ukládá do `~/Library/Application Support/ClaudeTouchBar/usage-archive.json`. Při prvním spuštění jednou projde všechny přepisy, které na disku jsou (může to chvíli trvat), a pak každý den doplní uzavřené dny. Celkem se proto počítá od prvního dne, kdy jsou přepisy k dispozici, a dál se archivuje lokálně; v okně je u něj datum „od …“. Archiv obsahuje jen čísla po dnech, žádný text sezení. Smazáním souboru se Celkem při dalším spuštění spočítá znovu z přepisů, které ještě zbyly.
 
 Cena v $ je **orientační přepočet podle veřejného API ceníku** (vstup, výstup, zápis a čtení z cache, podle modelu). U předplatného (Pro, Max, Team, Enterprise) se po tokenech neplatí. Číslo ukazuje, kolik by stejná práce stála přes API. Ceník je v `Sources/Pricing.swift`.
 

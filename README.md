@@ -11,7 +11,7 @@ Progress, spend and controls for the Claude desktop app, right on your MacBook's
 - **Live status:** ✳ working, ● waiting for you, ✓ done, with turn time and the tool in use.
 - **Approvals from the Touch Bar:** Allow / Deny without switching to Claude.
 - **Cards:** questions, the next-step box and new-session offers can be answered right on the Touch Bar, even from another app.
-- **Spend:** tokens and estimated cost per session, 5 h, day, week and month, $/h rate, a chart and a daily budget.
+- **Spend:** tokens and estimated cost per session, 5 h, day, week, month and all time, $/h rate, a chart and a daily budget.
 - **Controls:** permission mode, model and effort, session switching, Stop, New, Compact and a Commit + push button.
 - **Your own layout:** pick and reorder items across three layouts in the app's window.
 
@@ -62,7 +62,7 @@ The script builds the app, copies it to `~/Applications`, turns on launch at log
 
 Open it from Launchpad or Spotlight ("Claude Touch Bar"), or by tapping the numbers on the Touch Bar. Closing the window leaves the app running in the background.
 
-- **Overview:** status, approvals, context, plan progress, spend (session / 5 h / today / week / month), $/h rate, active time, 24 h and 30 day charts, daily budget with a runway estimate, changed files.
+- **Overview:** status, approvals, context, plan progress, spend (session / 5 h / today / week / month / all time since the first day), $/h rate, active time, 24 h and 30 day charts, daily budget with a runway estimate, changed files.
 - **Touch Bar:** an editor for the three layouts (Compact, Overview, Minimal). Turn items on and off and drag to reorder. ⇄ switches layouts on the Touch Bar itself.
 - **Claude integration:** hooks, approvals, cards, sounds, Accessibility permission.
 - **Git and Push:** name and folder of the repository for the ↑ button.
@@ -77,6 +77,7 @@ Open it from Launchpad or Spotlight ("Claude Touch Bar"), or by tapping the numb
 | Context | context usage, orange from 70 %, red from 90 % |
 | Compact | above 80 % context; sends `/compact` |
 | Spend | session, 5 h, today, week, month (tokens and $) |
+| All time | tokens and $ for as long as you've used it; on in the Overview layout, and the first to give way after 5 h when the bar runs out of room |
 | $/h rate, Active time | spend over the last hour, minutes Claude worked today |
 | Chart | spend per 5 minutes over the last hour |
 | Changed files | how many files Claude edited in the session (list in the window) |
@@ -98,6 +99,8 @@ They're added to `~/.claude/settings.json`. Your other hooks stay, and a backup 
 ## Where the numbers come from
 
 The Code tab writes session transcripts to `~/.claude/projects/**.jsonl`, and the app only reads them. It never touches your credentials and sends none of your data anywhere. Its only network request downloads the Czech National Bank's public USD/CZK rate (see below). The Chat tab doesn't store token counts locally, so it isn't counted.
+
+Claude Code deletes old transcripts (`cleanupPeriodDays`, 30 days by default). So that **All time** doesn't vanish with them, the app keeps daily token and cost totals in `~/Library/Application Support/ClaudeTouchBar/usage-archive.json`. On first launch it reads every transcript still on disk once (this can take a moment), then adds each finished day. All time therefore counts from the first day transcripts are available and keeps growing locally; the window shows the start date. The archive holds only per-day numbers, no session text. Delete the file and All time is rebuilt from whatever transcripts remain.
 
 The $ figure is an **estimate at public API prices** (input, output, cache writes and reads, per model). Subscriptions (Pro, Max, Team, Enterprise) aren't billed per token. The number shows what the same work would cost through the API. Prices live in `Sources/Pricing.swift`.
 

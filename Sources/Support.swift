@@ -362,6 +362,15 @@ enum Format {
         return String(format: "%d:%02d", s / 60, s % 60)
     }
 
+    /// "18. 10. 2026" / "Oct 18, 2026".
+    static func day(_ date: Date) -> String {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: L("cs_CZ", "en_US"))
+        f.dateStyle = .medium
+        f.timeStyle = .none
+        return f.string(from: date)
+    }
+
     static func percent(_ fraction: Double) -> String {
         "\(Int((fraction * 100).rounded()))" + L(" %", "%")
     }

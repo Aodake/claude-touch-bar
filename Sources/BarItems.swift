@@ -3,7 +3,7 @@ import Foundation
 /// Everything that can sit on the Touch Bar. The raw value is also the item's
 /// Touch Bar identifier suffix, so it must stay stable.
 enum BarItem: String, CaseIterable, Identifiable {
-    case state, plan, context, session, fiveHours, today, week, month
+    case state, plan, context, session, fiveHours, today, week, month, allTime
     case tokens, cost, rate, active, graph, model, files, waiting, compact
     case push, modelPicker, wide, switcher, more, collapse
 
@@ -19,6 +19,7 @@ enum BarItem: String, CaseIterable, Identifiable {
         case .today: return L("Útrata dnes", "Today's spend")
         case .week: return L("Útrata týden", "Week's spend")
         case .month: return L("Útrata měsíc", "Month's spend")
+        case .allTime: return L("Útrata celkem (za celou dobu)", "All-time spend")
         case .tokens: return L("Tokeny ▲▼", "Tokens ▲▼")
         case .cost: return L("Cena sezení", "Session cost")
         case .rate: return L("Tempo $/h", "Rate $/h")
@@ -58,7 +59,8 @@ enum LayoutItems {
             return [.state, .plan, .context, .session, .today, .waiting, .compact, .graph, .model, .push,
                     .switcher, .more, .collapse]
         case .overview:
-            return [.context, .plan, .session, .fiveHours, .today, .week, .waiting, .push, .switcher, .more, .collapse]
+            return [.context, .plan, .session, .fiveHours, .today, .week, .allTime, .waiting, .push, .switcher, .more,
+                    .collapse]
         case .minimal:
             return [.graph, .plan, .wide, .push, .switcher, .more, .collapse]
         }

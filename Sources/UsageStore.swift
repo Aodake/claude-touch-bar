@@ -65,6 +65,10 @@ struct Snapshot {
     /// This calendar week (from Monday) and this month.
     var week = Tokens()
     var month = Tokens()
+    /// Everything since the first day on record: the local archive of past
+    /// days plus the live transcripts.
+    var allTime = Tokens()
+    var allTimeSince: Date?
     /// Estimated $ per day over the last 30 days, oldest first.
     var daily: [Double] = []
     /// Minutes today in which Claude did something (5-minute resolution).
@@ -149,6 +153,11 @@ final class UsageStore {
     let root: URL
     private var files: [URL: FileState] = [:]
     private let queue = DispatchQueue(label: "ClaudeTouchBar.usage", qos: .utility)
+    private let archive: UsageArchive
+    /// Sealing reads every transcript newer than the archive, so it runs off
+    /// the scan queue; `sealing` (scan queue only) keeps it to one at a time.
+    private let sealQueue = DispatchQueue(label: "ClaudeTouchBar.archive", qos: .utility)
+    private var sealing = false
 
     private static let markers: [Data] = [
         Data("\"type\":\"assistant\"".utf8),
@@ -164,8 +173,10 @@ final class UsageStore {
     private let isoPlain = ISO8601DateFormatter()
 
     init(root: URL = FileManager.default.homeDirectoryForCurrentUser
-        .appendingPathComponent(".claude/projects", isDirectory: true)) {
+        .appendingPathComponent(".claude/projects", isDirectory: true),
+         archive: UsageArchive = UsageArchive()) {
         self.root = root.standardizedFileURL
+        self.archive = archive
     }
 
     /// `selected` pins a session (nil picks automatically); `hooks` are the
@@ -179,7 +190,49 @@ final class UsageStore {
 
     /// Synchronous variant for `--dump`.
     func scanNow() -> Snapshot {
-        queue.sync { scan(selected: nil, hooks: [:]) }
+        if let until = sealBoundary(now: Date()) { seal(until: until) }
+        return queue.sync { scan(selected: nil, hooks: [:]) }
+    }
+
+    // MARK: - Archive
+
+    /// Days before yesterday are complete; returns that boundary when the
+    /// archive doesn't reach it yet.
+    private func sealBoundary(now: Date) -> Date? {
+        let calendar = Calendar.current
+        guard let until = calendar.date(byAdding: .day, value: -1, to: calendar.startOfDay(for: now)) else { return nil }
+        if let sealed = archive.sealedUntil, sealed >= until { return nil }
+        return until
+    }
+
+    /// Adds up every day from the archive's boundary to `until` from all
+    /// transcripts on disk (the whole history on the first run) and stores it.
+    private func seal(until: Date) {
+        let from = archive.sealedUntil ?? .distantPast
+        var events: [String: UsageEvent] = [:]
+        // A file last written before `from` holds nothing newer than that.
+        for file in listTranscripts() where file.mtime >= from {
+            let state = FileState(url: file.url)
+            state.mtime = file.mtime
+            read(state)
+            for (id, event) in state.events where event.time >= from && event.time < until {
+                events[id] = event
+            }
+        }
+        let calendar = Calendar.current
+        var days: [Date: Tokens] = [:]
+        for event in events.values { days[calendar.startOfDay(for: event.time), default: Tokens()] += event.tokens }
+        archive.seal(days, until: until)
+    }
+
+    /// Scan queue only.
+    private func sealInBackgroundIfNeeded(now: Date) {
+        guard !sealing, let until = sealBoundary(now: now) else { return }
+        sealing = true
+        sealQueue.async {
+            self.seal(until: until)
+            self.queue.async { self.sealing = false }
+        }
     }
 
     // MARK: - Scanning
@@ -245,6 +298,17 @@ final class UsageStore {
             if event.time >= dayStart { activeBuckets.insert(Int(event.time.timeIntervalSince(dayStart) / 300)) }
         }
         snap.activeMinutes = activeBuckets.count * 5
+
+        // All time: sealed days from the archive, the rest live.
+        sealInBackgroundIfNeeded(now: now)
+        let archived = archive.summary
+        snap.allTime = archived.total
+        var firstLive: Date?
+        for event in allEvents.values where archived.sealedUntil.map({ event.time >= $0 }) ?? true {
+            snap.allTime += event.tokens
+            firstLive = min(firstLive ?? event.time, event.time)
+        }
+        snap.allTimeSince = archived.firstDay ?? firstLive.map { calendar.startOfDay(for: $0) }
 
         // Recent sessions, each with its best-known activity.
         let recentLimit = now.addingTimeInterval(-3 * 3600)
@@ -392,26 +456,31 @@ final class UsageStore {
             files[url] = state
         }
         state.mtime = mtime
+        read(state)
+    }
 
-        guard let fh = try? FileHandle(forReadingFrom: url) else { return }
+    /// Parses whatever was appended to the file since `state.offset`, in
+    /// chunks so a large transcript isn't loaded whole.
+    private func read(_ state: FileState) {
+        guard let fh = try? FileHandle(forReadingFrom: state.url) else { return }
         defer { try? fh.close() }
         do {
             try fh.seek(toOffset: state.offset)
         } catch {
             return
         }
-        guard let data = try? fh.readToEnd(), !data.isEmpty else { return }
-        state.offset += UInt64(data.count)
-
-        var buffer = state.remainder
-        buffer.append(data)
-        var lineStart = buffer.startIndex
-        while let newline = buffer[lineStart...].firstIndex(of: UInt8(ascii: "\n")) {
-            let line = buffer[lineStart..<newline]
-            if !line.isEmpty { handle(line: Data(line), in: state) }
-            lineStart = buffer.index(after: newline)
+        while let data = try? fh.read(upToCount: 8 << 20), !data.isEmpty {
+            state.offset += UInt64(data.count)
+            var buffer = state.remainder
+            buffer.append(data)
+            var lineStart = buffer.startIndex
+            while let newline = buffer[lineStart...].firstIndex(of: UInt8(ascii: "\n")) {
+                let line = buffer[lineStart..<newline]
+                if !line.isEmpty { handle(line: Data(line), in: state) }
+                lineStart = buffer.index(after: newline)
+            }
+            state.remainder = Data(buffer[lineStart...])
         }
-        state.remainder = Data(buffer[lineStart...])
     }
 
     private func handle(line: Data, in state: FileState) {

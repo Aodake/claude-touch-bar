@@ -20,7 +20,7 @@ Claude Touch Bar is a local-only utility. In short:
 - **Reads transcripts, read-only.** Token counts, cost estimates and session status come from the transcript files the Claude desktop app writes to `~/.claude/projects/**.jsonl`. The app only reads them and never changes them.
 - **No credentials.** The app never reads, stores or sends your Claude login, API keys, tokens or anything from the Keychain.
 - **Hooks over a local Unix socket.** If you turn on hooks, the app adds entries to `~/.claude/settings.json` (your other hooks stay, and a backup is saved as `settings.json.bak-claudetouchbar`). The hooks run the app's own binary, which passes events to the running app over a Unix domain socket in `~/Library/Application Support/ClaudeTouchBar/`. The socket isn't reachable from the network. Hooks can be removed at any time from the app window or with `--uninstall-hooks`.
-- **Local files it writes:** its settings (macOS user defaults), a hook log in `~/Library/Application Support/ClaudeTouchBar/hooks.log`, and, if you turn on launch at login, `~/Library/LaunchAgents/local.ClaudeTouchBar.plist`.
+- **Local files it writes:** its settings (macOS user defaults), a hook log in `~/Library/Application Support/ClaudeTouchBar/hooks.log`, daily token and cost totals for the all-time figure in `usage-archive.json` next to it (numbers only, no session text), and, if you turn on launch at login, `~/Library/LaunchAgents/local.ClaudeTouchBar.plist`.
 - **Git, only on demand.** For the ↑ Commit and push item it runs `/usr/bin/git` locally to count changes in the folder you chose. The commit and push themselves are done by Claude when you tap the button.
 
 ## Permissions and why

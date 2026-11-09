@@ -37,7 +37,7 @@ final class TouchBarController: NSObject, NSTouchBarDelegate {
         static let modeOptions = ClaudeUI.touchBarModes.indices.map {
             NSTouchBarItem.Identifier("local.ClaudeTouchBar.modeOption\($0)")
         }
-        static let week = item(.week), month = item(.month), rate = item(.rate), active = item(.active)
+        static let week = item(.week), month = item(.month), allTime = item(.allTime), rate = item(.rate), active = item(.active)
         static let files = item(.files), waiting = item(.waiting), compact = item(.compact)
         static let modelPicker = item(.modelPicker)
         static let effort = NSTouchBarItem.Identifier("local.ClaudeTouchBar.effort")
@@ -320,6 +320,9 @@ final class TouchBarController: NSObject, NSTouchBarDelegate {
         switch identifier {
         case ID.graph, ID.model, ID.fiveHours, ID.sessions:
             item.visibilityPriority = .low
+        case ID.allTime:
+            // When the bar runs out of room it goes after 5 h, before anything else.
+            item.visibilityPriority = NSTouchBarItem.Priority(rawValue: -500)
         case ID.switcher, ID.more, ID.state, ID.wide, ID.allow, ID.deny:
             item.visibilityPriority = .high
         default:
@@ -654,6 +657,7 @@ final class TouchBarController: NSObject, NSTouchBarDelegate {
 
         set(ID.week, summary(L("Týden", "Week"), s.week))
         set(ID.month, summary(L("Měsíc", "Month"), s.month, czk: true))
+        set(ID.allTime, summary(L("Celkem", "All time"), s.allTime))
         set(ID.rate, [(Format.cost(s.hourlyRate), .white), ("/h" + Format.czkSuffix(s.hourlyRate), Palette.dim)])
         set(ID.active, [("⏱ ", Palette.dim), (Format.minutes(s.activeMinutes), .white)])
         set(ID.files, [(" \(s.changedFiles.count) ", .white), (s.changedFiles.count == 1 ? L("soubor", "file") : L("souborů", "files"), Palette.dim)])

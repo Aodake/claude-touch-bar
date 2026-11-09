@@ -223,6 +223,12 @@ struct OverviewSection: View {
             GridRow {
                 Text("").frame(maxWidth: .infinity).gridColumnAlignment(.leading)
                 ForEach([L("Sezení", "Session"), "5 h", L("Dnes", "Today"), L("Týden", "Week"), L("Měsíc", "Month")], id: \.self) { Text($0).bold() }
+                VStack(alignment: .trailing, spacing: 1) {
+                    Text(L("Celkem", "All time")).bold()
+                    if let since = s.allTimeSince {
+                        Text(L("od ", "since ") + Format.day(since)).font(.caption2).foregroundStyle(.secondary)
+                    }
+                }
             }
             row(L("Vstup", "Input"), \.input)
             row(L("Čtení z cache", "Cache read"), \.cacheRead)
@@ -235,7 +241,7 @@ struct OverviewSection: View {
                 ForEach(columns.indices, id: \.self) { Text(Format.cost(columns[$0].cost)) }
             }
             .bold()
-            // The five columns have no room for "$27 (≈ 620 Kč)", so Kč gets its own row.
+            // The columns have no room for "$27 (≈ 620 Kč)", so Kč gets its own row.
             if Settings.showsCZK {
                 GridRow {
                     Text("≈ v Kč").foregroundStyle(.secondary)
@@ -246,7 +252,7 @@ struct OverviewSection: View {
         .monospacedDigit()
     }
 
-    private var columns: [Tokens] { [s.session, s.fiveHours, s.today, s.week, s.month] }
+    private var columns: [Tokens] { [s.session, s.fiveHours, s.today, s.week, s.month, s.allTime] }
 
     private func row(_ label: String, _ key: KeyPath<Tokens, Int>) -> some View {
         GridRow {

@@ -74,6 +74,7 @@ if arguments.contains("--dump") {
     line(L("Dnes", "Today"), s.today)
     line(L("Týden", "Week"), s.week)
     line(L("Měsíc", "Month"), s.month)
+    line(L("Celkem", "All time") + (s.allTimeSince.map { " (" + L("od", "since") + " " + Format.day($0) + ")" } ?? ""), s.allTime)
     print(L("Sezení za poslední 3 h", "Sessions in the last 3 h") + ": \(s.sessions.map { "\($0.title) (\($0.activity))" }.joined(separator: ", "))")
     print(L("Posledních 60 min po 5 min", "Last 60 min in 5 min steps") + ": \(s.burn.map { Format.cost($0) }.joined(separator: " "))")
     if Settings.showsCZK {
